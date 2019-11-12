@@ -52,18 +52,29 @@
 #define ID_PC_CANCELA                   1044
 #define ID_EDM_CANCELA                  1045
 #define ID_NC_CANCELA                   1046
-#define ID_EC_APLICAR                   1047
 #define ID_EN_OK                        1048
-#define ID_EC_OK                        1048
-#define ID_EC_CANCELA                   1049
+#define RD_NC_CONTADO                   1050
+#define BTN_EC_APLICAR                  1051
+#define ID_EC_CANCELA                   1052
+#define BTN_NC_VERIFICAR                1053
+#define BMP_NC_MASCOTA1                 1054
+#define BMP_NC_MASCOTA2                 1055
+#define BTN_NC_EXAMFOTO1                1056
+#define BTN_NC_EXAMFOTO2                1057
+#define EDT_NC_MNOMBRE                  1058
+#define CB_NC_ESPECIE                   1059
+#define ST_RELOJ                        1060
+#define ST_MENU_RELOJ                   1060
+#define BTN_EDITDOCINFO                 1066
+#define IDC_BUTTON7                     1068
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        109
-#define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1050
+#define _APS_NEXT_RESOURCE_VALUE        110
+#define _APS_NEXT_COMMAND_VALUE         40008
+#define _APS_NEXT_CONTROL_VALUE         1069
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

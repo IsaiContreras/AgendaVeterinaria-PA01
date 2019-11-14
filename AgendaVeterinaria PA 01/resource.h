@@ -7,11 +7,13 @@
 #define IDD_NUEVACITA                   105
 #define IDD_PAGOCITA                    107
 #define IDD_EDITARCITA                  108
+#define IDD_PRIMERDOCTOR                109
+#define IDR_MENU1                       118
 #define BTN_SALIR                       1001
 #define BMP_MENU_DOCTOR                 1002
 #define ST_MENU_DOCTOR                  1003
 #define ST_MENU_CEDULA                  1004
-#define BTN_MENU_EDITDOCINFO            1005
+#define BTN_EDITDOCINFO                 1005
 #define IDC_LISTACITAS                  1006
 #define BTN_NUEVACITA                   1007
 #define BTN_EDITARCITA                  1008
@@ -63,18 +65,16 @@
 #define BTN_NC_EXAMFOTO2                1057
 #define EDT_NC_MNOMBRE                  1058
 #define CB_NC_ESPECIE                   1059
-#define ST_RELOJ                        1060
 #define ST_MENU_RELOJ                   1060
-#define BTN_EDITDOCINFO                 1066
-#define IDC_BUTTON7                     1068
+#define ST_LISTCOUNT                    1069
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        110
-#define _APS_NEXT_COMMAND_VALUE         40008
-#define _APS_NEXT_CONTROL_VALUE         1069
+#define _APS_NEXT_RESOURCE_VALUE        119
+#define _APS_NEXT_COMMAND_VALUE         40018
+#define _APS_NEXT_CONTROL_VALUE         1075
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

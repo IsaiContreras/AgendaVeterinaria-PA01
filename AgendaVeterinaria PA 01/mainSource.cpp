@@ -5,6 +5,7 @@
 using namespace std;
 
 #define TM_RELOJ 3000
+#define TM_NC_RELOJ 3001
 
 HINSTANCE hInstGlobal;
 HWND hMenu;
@@ -28,12 +29,12 @@ struct CITA {
 	string telefono;
 	string especie;
 	string motivoConsulta;
+	string image[2];
 	int year;
 	int month;
 	int day;
 	int hour;
-	HBITMAP foto1;
-	HBITMAP foto2;
+	int minutes;
 	int formaPago;
 	float costo;
 	CITA *next;
@@ -47,6 +48,7 @@ bool exitApp = false;
 bool verificarNum(string c);
 bool verificarAlfa(string c);
 int countList();
+void ordenamientoImpresion();
 
 BOOL CALLBACK menuPrincipal(HWND, UINT, WPARAM, LPARAM);
 BOOL CALLBACK nuevaCita(HWND, UINT, WPARAM, LPARAM);
@@ -60,7 +62,6 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrev, PSTR cmdLine, int cShow) {
 	hInstGlobal = hInst;
 
 	hMenu = CreateDialog(hInst, MAKEINTRESOURCE(IDD_MENU), NULL, menuPrincipal);
-	SetTimer(hMenu, TM_RELOJ, 1000, NULL);
 
 	ShowWindow(hMenu, SW_SHOW);
 
@@ -77,7 +78,9 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrev, PSTR cmdLine, int cShow) {
 BOOL CALLBACK menuPrincipal(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 	switch (msg) {
 	case WM_INITDIALOG: {
+		SetTimer(hwnd, TM_RELOJ, 1000, NULL);
 		hLbAgenda = GetDlgItem(hwnd, IDC_LISTACITAS);
+
 		hLblReloj = GetDlgItem(hwnd, ST_MENU_RELOJ);
 		hLblNombreMedico = GetDlgItem(hwnd, ST_MENU_DOCTOR);
 		hLblCedula = GetDlgItem(hwnd, ST_MENU_CEDULA);
@@ -112,6 +115,7 @@ BOOL CALLBACK menuPrincipal(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 			DestroyWindow(hMenu);
 			hNuevaCita = CreateDialog(hInstGlobal, MAKEINTRESOURCE(IDD_NUEVACITA), NULL, nuevaCita);
 			ShowWindow(hNuevaCita, SW_SHOW);
+			
 		}
 		if (LOWORD(wParam) == BTN_PAGARCITA && HIWORD(wParam) == BN_CLICKED) {
 			DestroyWindow(hMenu);
@@ -171,8 +175,10 @@ BOOL CALLBACK nuevaCita(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 			SendMessage(hCbEspecie, CB_ADDSTRING, 0, (LPARAM)"Lagarto");
 			SendMessage(hCbEspecie, CB_ADDSTRING, 0, (LPARAM)"???");
 
+			SetTimer(hwnd, TM_NC_RELOJ, 1000, NULL);
 			HWND hLblNombreMedicoNC = GetDlgItem(hwnd, ST_NC_DOCTOR);
 			HWND hLblCedulaNC = GetDlgItem(hwnd, ST_NC_CEDULA);
+			hLblReloj = GetDlgItem(hwnd, ST_NC_RELOJ);
 			SetWindowText(hLblNombreMedicoNC, nombreMedico);
 			SetWindowText(hLblCedulaNC, cedula);
 	}break;
@@ -189,9 +195,11 @@ BOOL CALLBACK nuevaCita(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 				delete aux;
 				aux = origin;
 			}
+			KillTimer(hNuevaCita, TM_NC_RELOJ);
 			DestroyWindow(hNuevaCita);
 			hMenu = CreateDialog(hInstGlobal, MAKEINTRESOURCE(IDD_MENU), NULL, menuPrincipal);
 			ShowWindow(hMenu, SW_SHOW);
+			hLblReloj = GetDlgItem(hwnd, ST_MENU_RELOJ);
 		}
 		if (LOWORD(wParam) == IDOK && HIWORD(wParam) == BN_CLICKED) {
 			int length;
@@ -269,50 +277,82 @@ BOOL CALLBACK nuevaCita(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 			string Y = f.substr(6, 4);
 			string m = f.substr(3, 2);
 			string d = f.substr(0, 2);
-
-			int yearComp = stoi(Y);
-			if (yearComp < tiempoActual->tm_year) {
-				MessageBox(hwnd, "Coloque una fecha válida, evite poner fechas pasadas.", "AVISO", MB_ICONEXCLAMATION);
-				break;
-			}
-			else {
-				aux->year = yearComp;
-			}
-
-			int monthComp = stoi(m);
-			if (monthComp < tiempoActual->tm_mon) {
-				MessageBox(hwnd, "Coloque una fecha válida, evite poner fechas pasadas.", "AVISO", MB_ICONEXCLAMATION);
-				break;
-			}
-			else {
-				aux->month = monthComp;
-			}
-
-			int dayComp = stoi(d);
-			if (dayComp < tiempoActual->tm_mday) {
-				MessageBox(hwnd, "Coloque una fecha válida, evite poner fechas pasadas.", "AVISO", MB_ICONEXCLAMATION);
-				break;
-			}
-			else {
-				aux->day = dayComp;
-			}
-
 			HWND hTpHora = GetDlgItem(hwnd, IDC_DATETIMEPICKER2);
 			GetWindowText(hTpHora, buff, 15);
 			string h(buff);
 			string I = h.substr(0, 2);
 			string amPm = h.substr(9, 1);
+			string min = h.substr(3, 2);
 
+			int yearComp = stoi(Y);
+			int monthComp = stoi(m);
+			int dayComp = stoi(d);
 			int hourComp = stoi(I);
-			if (amPm == "p") {
-				hourComp += 12;
-			}
-			if (hourComp <= tiempoActual->tm_hour) {
-				MessageBox(hwnd, "La hora no debe ser igual o pasada al tiempo actual.", "AVISO", MB_ICONEXCLAMATION);
-				break;
+			int minuteComp = stoi(min);
+			if (yearComp >= tiempoActual->tm_year + 1900) {
+				if (yearComp == tiempoActual->tm_year + 1900) {
+					if (monthComp >= tiempoActual->tm_mon + 1) {
+						if (monthComp == tiempoActual->tm_mon + 1) {
+							if (dayComp >= tiempoActual->tm_mday) {
+								if (dayComp == tiempoActual->tm_mday) {
+									if (amPm == "p") {
+										hourComp += 12;
+									}
+									if (hourComp >= tiempoActual->tm_hour) {
+										if (minuteComp > tiempoActual->tm_min) {
+											aux->year = yearComp;
+											aux->month = monthComp;
+											aux->day = dayComp;
+											aux->hour = hourComp;
+											aux->minutes = minuteComp;
+										}
+										else {
+											MessageBox(hwnd, "La hora no debe ser igual o pasada al tiempo actual.", "AVISO", MB_ICONEXCLAMATION);
+											break;
+										}
+									}
+									else {
+										MessageBox(hwnd, "La hora no debe ser igual o pasada al tiempo actual.", "AVISO", MB_ICONEXCLAMATION);
+										break;
+									}
+								}
+								else {
+									aux->year = yearComp;
+									aux->month = monthComp;
+									aux->day = dayComp;
+									aux->hour = hourComp;
+									aux->minutes = minuteComp;
+								}
+							}
+							else {
+								MessageBox(hwnd, "Coloque fecha válida, el día debe ser actual o próximo.", "AVISO", MB_ICONEXCLAMATION);
+								break;
+							}
+						}
+						else {
+							aux->year = yearComp;
+							aux->month = monthComp;
+							aux->day = dayComp;
+							aux->hour = hourComp;
+							aux->minutes = minuteComp;
+						}
+					}
+					else {
+						MessageBox(hwnd, "Coloque fecha válida, el mes debe ser actual o próximo.", "AVISO", MB_ICONEXCLAMATION);
+						break;
+					}
+				}
+				else {
+					aux->year = yearComp;
+					aux->month = monthComp;
+					aux->day = dayComp;
+					aux->hour = hourComp;
+					aux->minutes = minuteComp;
+				}
 			}
 			else {
-				aux->hour = hourComp;
+				MessageBox(hwnd, "Coloque fecha válida, el año debe ser actual o próximo.", "AVISO", MB_ICONEXCLAMATION);
+				break;
 			}
 
 			HWND hEdMotivo = GetDlgItem(hwnd, EDT_NC_MOTIVO);
@@ -365,10 +405,21 @@ BOOL CALLBACK nuevaCita(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 			
 			aux = origin;
 
+			KillTimer(hNuevaCita, TM_NC_RELOJ);
 			DestroyWindow(hNuevaCita);
 			hMenu = CreateDialog(hInstGlobal, MAKEINTRESOURCE(IDD_MENU), NULL, menuPrincipal);
 			ShowWindow(hMenu, SW_SHOW);
+			hLblReloj = GetDlgItem(hwnd, ST_MENU_RELOJ);
+
+			ordenamientoImpresion();
 		}
+	}break;
+	case WM_TIMER: {
+		time(&allTime);
+		tiempoActual = localtime(&allTime);
+		char reloj[80];
+		strftime(reloj, 80, "Hoy es: %d/%m/%Y  %I:%M:%S", tiempoActual);
+		SetWindowText(hLblReloj, reloj);
 	}break;
 	}
 	return FALSE;
@@ -459,10 +510,6 @@ BOOL CALLBACK editarCita(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 BOOL CALLBACK primerDoctor(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 	switch (msg) {
 	case WM_COMMAND:
-		if (LOWORD(wParam) == ID_EDM_CANCELA && HIWORD(wParam) == BN_CLICKED) {
-			EndDialog(hwnd, 0);
-			break;
-		}
 		if (LOWORD(wParam = IDOK && HIWORD(wParam) == BN_CLICKED)) {
 			HWND hEdNombreMedico = GetDlgItem(hwnd, EDT_EDM_DOCTOR);
 			int length = GetWindowTextLength(hEdNombreMedico);
@@ -494,6 +541,8 @@ BOOL CALLBACK primerDoctor(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
 			EndDialog(hwnd, 0);
 		}
+		break;
+	case WM_CLOSE:
 		break;
 	}
 	return FALSE;
@@ -531,4 +580,143 @@ int countList() {
 	}
 	aux = origin;
 	return counter;
+}
+
+void ordenamientoImpresion() {
+	CITA *auxActual, *auxProx;
+	
+	auxActual = aux;
+	while (auxActual->next != NULL) {
+		auxProx = auxActual->next;
+		while (auxProx != NULL) {
+			if (auxActual->year > auxProx->year) {
+				string tNombreD = auxProx->nombreDueño;
+				string tNombreM = auxProx->nombreMascota;
+				string tTel = auxProx->telefono;
+				string tEsp = auxProx->especie;
+				string tMotivo = auxProx->motivoConsulta;
+				int tY = auxProx->year;
+				int tM = auxProx->month;
+				int tD = auxProx->day;
+				int tH = auxProx->hour;
+				int tPago = auxProx->formaPago;
+				float tCosto = auxProx->costo;
+
+				auxProx->nombreDueño = auxActual->nombreDueño;
+				auxProx->nombreMascota = auxActual->nombreMascota;
+				auxProx->telefono = auxActual->telefono;
+				auxProx->especie = auxActual->especie;
+				auxProx->motivoConsulta = auxActual->motivoConsulta;
+				auxProx->year = auxActual->year;
+				auxProx->month = auxActual->month;
+				auxProx->day = auxActual->day;
+				auxProx->hour = auxActual->hour;
+				auxProx->formaPago = auxActual->formaPago;
+				auxProx->costo = auxActual->costo;
+
+				auxActual->nombreDueño = tNombreD;
+				auxActual->nombreMascota = tNombreM;
+				auxActual->telefono = tTel;
+				auxActual->especie = tEsp;
+				auxActual->motivoConsulta = tMotivo;
+				auxActual->year = tY;
+				auxActual->month = tM;
+				auxActual->day = tD;
+				auxActual->hour = tH;
+				auxActual->formaPago = tPago;
+				auxActual->costo = tCosto;
+			}
+			else if (auxActual->year == auxProx->year && auxActual->month > auxProx->month) {
+				string tNombreD = auxProx->nombreDueño;
+				string tNombreM = auxProx->nombreMascota;
+				string tTel = auxProx->telefono;
+				string tEsp = auxProx->especie;
+				string tMotivo = auxProx->motivoConsulta;
+				int tY = auxProx->year;
+				int tM = auxProx->month;
+				int tD = auxProx->day;
+				int tH = auxProx->hour;
+				int tPago = auxProx->formaPago;
+				float tCosto = auxProx->costo;
+
+				auxProx->nombreDueño = auxActual->nombreDueño;
+				auxProx->nombreMascota = auxActual->nombreMascota;
+				auxProx->telefono = auxActual->telefono;
+				auxProx->especie = auxActual->especie;
+				auxProx->motivoConsulta = auxActual->motivoConsulta;
+				auxProx->year = auxActual->year;
+				auxProx->month = auxActual->month;
+				auxProx->day = auxActual->day;
+				auxProx->hour = auxActual->hour;
+				auxProx->formaPago = auxActual->formaPago;
+				auxProx->costo = auxActual->costo;
+
+				auxActual->nombreDueño = tNombreD;
+				auxActual->nombreMascota = tNombreM;
+				auxActual->telefono = tTel;
+				auxActual->especie = tEsp;
+				auxActual->motivoConsulta = tMotivo;
+				auxActual->year = tY;
+				auxActual->month = tM;
+				auxActual->day = tD;
+				auxActual->hour = tH;
+				auxActual->formaPago = tPago;
+				auxActual->costo = tCosto;
+			}
+			else if (auxActual->year == auxProx->year && auxActual->month == auxProx->month && auxActual->day > auxProx->day) {
+				string tNombreD = auxProx->nombreDueño;
+				string tNombreM = auxProx->nombreMascota;
+				string tTel = auxProx->telefono;
+				string tEsp = auxProx->especie;
+				string tMotivo = auxProx->motivoConsulta;
+				int tY = auxProx->year;
+				int tM = auxProx->month;
+				int tD = auxProx->day;
+				int tH = auxProx->hour;
+				int tPago = auxProx->formaPago;
+				float tCosto = auxProx->costo;
+
+				auxProx->nombreDueño = auxActual->nombreDueño;
+				auxProx->nombreMascota = auxActual->nombreMascota;
+				auxProx->telefono = auxActual->telefono;
+				auxProx->especie = auxActual->especie;
+				auxProx->motivoConsulta = auxActual->motivoConsulta;
+				auxProx->year = auxActual->year;
+				auxProx->month = auxActual->month;
+				auxProx->day = auxActual->day;
+				auxProx->hour = auxActual->hour;
+				auxProx->formaPago = auxActual->formaPago;
+				auxProx->costo = auxActual->costo;
+
+				auxActual->nombreDueño = tNombreD;
+				auxActual->nombreMascota = tNombreM;
+				auxActual->telefono = tTel;
+				auxActual->especie = tEsp;
+				auxActual->motivoConsulta = tMotivo;
+				auxActual->year = tY;
+				auxActual->month = tM;
+				auxActual->day = tD;
+				auxActual->hour = tH;
+				auxActual->formaPago = tPago;
+				auxActual->costo = tCosto;
+			}
+			auxProx = auxProx->next;
+		}
+		auxActual = auxActual->next;
+	}
+
+	while (aux != NULL) {
+		string Y = to_string(aux->year);
+		string M = to_string(aux->month);
+		string D = to_string(aux->day);
+		string H = to_string(aux->hour);
+		string fecha = D + "/" + M + "/" + Y + "  " + H + ":00";
+		string display = aux->nombreMascota + "   " + fecha;
+		char buffL[100];
+		strcpy(buffL, display.c_str());
+		SendMessage(hLbAgenda, LB_ADDSTRING, 0, (LPARAM)buffL);
+
+		aux = aux->next;
+	}
+	aux = origin;
 }

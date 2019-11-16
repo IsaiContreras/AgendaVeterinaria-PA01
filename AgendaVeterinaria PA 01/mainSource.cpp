@@ -48,7 +48,8 @@ bool exitApp = false;
 bool verificarNum(string c);
 bool verificarAlfa(string c);
 int countList();
-void ordenamientoImpresion();
+void ordenamiento();
+void impresion();
 
 BOOL CALLBACK menuPrincipal(HWND, UINT, WPARAM, LPARAM);
 BOOL CALLBACK nuevaCita(HWND, UINT, WPARAM, LPARAM);
@@ -64,6 +65,7 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrev, PSTR cmdLine, int cShow) {
 	hMenu = CreateDialog(hInst, MAKEINTRESOURCE(IDD_MENU), NULL, menuPrincipal);
 
 	ShowWindow(hMenu, SW_SHOW);
+	SetTimer(hMenu, TM_RELOJ, 1000, NULL);
 
 	MSG msg;
 	ZeroMemory(&msg, sizeof(MSG));
@@ -78,10 +80,11 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrev, PSTR cmdLine, int cShow) {
 BOOL CALLBACK menuPrincipal(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 	switch (msg) {
 	case WM_INITDIALOG: {
-		SetTimer(hwnd, TM_RELOJ, 1000, NULL);
 		hLbAgenda = GetDlgItem(hwnd, IDC_LISTACITAS);
+		impresion();
 
 		hLblReloj = GetDlgItem(hwnd, ST_MENU_RELOJ);
+
 		hLblNombreMedico = GetDlgItem(hwnd, ST_MENU_DOCTOR);
 		hLblCedula = GetDlgItem(hwnd, ST_MENU_CEDULA);
 		if (nombreMedico[0] != NULL) {
@@ -106,16 +109,17 @@ BOOL CALLBACK menuPrincipal(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 			DestroyWindow(hMenu);
 		}
 		if (LOWORD(wParam) == BTN_EDITDOCINFO && HIWORD(wParam) == BN_CLICKED) {
+			KillTimer(hMenu, TM_RELOJ);
 			DestroyWindow(hMenu);
 			hEditarDoctor = CreateDialog(hInstGlobal, MAKEINTRESOURCE(IDD_EDITDOCTOR), NULL, editarInfoDoctor);
 			ShowWindow(hEditarDoctor, SW_SHOW);
-			
 		}
 		if (LOWORD(wParam) == BTN_NUEVACITA && HIWORD(wParam) == BN_CLICKED) {
+			KillTimer(hMenu, TM_RELOJ);
 			DestroyWindow(hMenu);
 			hNuevaCita = CreateDialog(hInstGlobal, MAKEINTRESOURCE(IDD_NUEVACITA), NULL, nuevaCita);
 			ShowWindow(hNuevaCita, SW_SHOW);
-			
+			SetTimer(hNuevaCita, TM_NC_RELOJ, 1000, NULL);
 		}
 		if (LOWORD(wParam) == BTN_PAGARCITA && HIWORD(wParam) == BN_CLICKED) {
 			DestroyWindow(hMenu);
@@ -139,6 +143,7 @@ BOOL CALLBACK menuPrincipal(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 		break;
 	case WM_DESTROY: 
 		if (exitApp) {
+			
 			PostQuitMessage(0);
 		}
 	break;
@@ -171,11 +176,8 @@ BOOL CALLBACK nuevaCita(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 			SendMessage(hCbEspecie, CB_ADDSTRING, 0, (LPARAM)"Loro");
 			SendMessage(hCbEspecie, CB_ADDSTRING, 0, (LPARAM)"Tortuga");
 			SendMessage(hCbEspecie, CB_ADDSTRING, 0, (LPARAM)"Pez");
-			SendMessage(hCbEspecie, CB_ADDSTRING, 0, (LPARAM)"Burro");
 			SendMessage(hCbEspecie, CB_ADDSTRING, 0, (LPARAM)"Lagarto");
-			SendMessage(hCbEspecie, CB_ADDSTRING, 0, (LPARAM)"???");
 
-			SetTimer(hwnd, TM_NC_RELOJ, 1000, NULL);
 			HWND hLblNombreMedicoNC = GetDlgItem(hwnd, ST_NC_DOCTOR);
 			HWND hLblCedulaNC = GetDlgItem(hwnd, ST_NC_CEDULA);
 			hLblReloj = GetDlgItem(hwnd, ST_NC_RELOJ);
@@ -199,7 +201,7 @@ BOOL CALLBACK nuevaCita(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 			DestroyWindow(hNuevaCita);
 			hMenu = CreateDialog(hInstGlobal, MAKEINTRESOURCE(IDD_MENU), NULL, menuPrincipal);
 			ShowWindow(hMenu, SW_SHOW);
-			hLblReloj = GetDlgItem(hwnd, ST_MENU_RELOJ);
+			SetTimer(hMenu, TM_RELOJ, 1000, NULL);
 		}
 		if (LOWORD(wParam) == IDOK && HIWORD(wParam) == BN_CLICKED) {
 			int length;
@@ -299,16 +301,25 @@ BOOL CALLBACK nuevaCita(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 										hourComp += 12;
 									}
 									if (hourComp >= tiempoActual->tm_hour) {
-										if (minuteComp > tiempoActual->tm_min) {
+										if (hourComp == tiempoActual->tm_hour) {
+											if (minuteComp > tiempoActual->tm_min) {
+												aux->year = yearComp;
+												aux->month = monthComp;
+												aux->day = dayComp;
+												aux->hour = hourComp;
+												aux->minutes = minuteComp;
+											}
+											else {
+												MessageBox(hwnd, "La hora no debe ser igual o pasada al tiempo actual.", "AVISO", MB_ICONEXCLAMATION);
+												break;
+											}
+										}
+										else {
 											aux->year = yearComp;
 											aux->month = monthComp;
 											aux->day = dayComp;
 											aux->hour = hourComp;
 											aux->minutes = minuteComp;
-										}
-										else {
-											MessageBox(hwnd, "La hora no debe ser igual o pasada al tiempo actual.", "AVISO", MB_ICONEXCLAMATION);
-											break;
 										}
 									}
 									else {
@@ -409,9 +420,9 @@ BOOL CALLBACK nuevaCita(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 			DestroyWindow(hNuevaCita);
 			hMenu = CreateDialog(hInstGlobal, MAKEINTRESOURCE(IDD_MENU), NULL, menuPrincipal);
 			ShowWindow(hMenu, SW_SHOW);
-			hLblReloj = GetDlgItem(hwnd, ST_MENU_RELOJ);
+			SetTimer(hMenu, TM_RELOJ, 1000, NULL);
 
-			ordenamientoImpresion();
+			ordenamiento();
 		}
 	}break;
 	case WM_TIMER: {
@@ -444,9 +455,10 @@ BOOL CALLBACK editarInfoDoctor(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 			DestroyWindow(hEditarDoctor);
 			hMenu = CreateDialog(hInstGlobal, MAKEINTRESOURCE(IDD_MENU), NULL, menuPrincipal);
 			ShowWindow(hMenu, SW_SHOW);
+			SetTimer(hMenu, TM_RELOJ, 1000, NULL);
 			break;
 		}
-		if (LOWORD(wParam = IDOK && HIWORD(wParam) == BN_CLICKED)) {
+		if (LOWORD(wParam = ID_EDM_OK && HIWORD(wParam) == BN_CLICKED)) {
 			HWND hEdNombreMedico = GetDlgItem(hwnd, EDT_EDM_DOCTOR);
 			int length = GetWindowTextLength(hEdNombreMedico);
 			if (length > 0) {
@@ -475,7 +487,10 @@ BOOL CALLBACK editarInfoDoctor(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 			DestroyWindow(hEditarDoctor);
 			hMenu = CreateDialog(hInstGlobal, MAKEINTRESOURCE(IDD_MENU), NULL, menuPrincipal);
 			ShowWindow(hMenu, SW_SHOW);
+			SetTimer(hMenu, TM_RELOJ, 1000, NULL);
 		}
+		break;
+	case WM_CLOSE:
 		break;
 	}
 	return FALSE;
@@ -509,8 +524,11 @@ BOOL CALLBACK editarCita(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
 BOOL CALLBACK primerDoctor(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 	switch (msg) {
+	case WM_INITDIALOG:
+		MessageBox(hwnd, "Hola, doctor. Ingrese sus datos para empezar su agenda.", "BIENVENIDO", MB_ICONINFORMATION);
+		break;
 	case WM_COMMAND:
-		if (LOWORD(wParam = IDOK && HIWORD(wParam) == BN_CLICKED)) {
+		if (LOWORD(wParam = ID_PM_OK && HIWORD(wParam) == BN_CLICKED)) {
 			HWND hEdNombreMedico = GetDlgItem(hwnd, EDT_EDM_DOCTOR);
 			int length = GetWindowTextLength(hEdNombreMedico);
 			if (length > 0) {
@@ -582,10 +600,10 @@ int countList() {
 	return counter;
 }
 
-void ordenamientoImpresion() {
+void ordenamiento() {
 	CITA *auxActual, *auxProx;
 	
-	auxActual = aux;
+	auxActual = origin;
 	while (auxActual->next != NULL) {
 		auxProx = auxActual->next;
 		while (auxProx != NULL) {
@@ -704,7 +722,9 @@ void ordenamientoImpresion() {
 		}
 		auxActual = auxActual->next;
 	}
+}
 
+void impresion() {
 	while (aux != NULL) {
 		string Y = to_string(aux->year);
 		string M = to_string(aux->month);

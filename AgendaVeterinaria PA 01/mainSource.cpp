@@ -4,12 +4,18 @@
 #include "resource.h"
 using namespace std;
 
+//msdn
+//StackOverflow
+//C SHEEL
+//Videojuego TIS 100
+
 #define TM_RELOJ 3000
 #define TM_NC_RELOJ 3001
 
 #pragma region VariablesGlobales
 HINSTANCE hInstGlobal;
-HWND hMenu;
+HMENU hBarraMenu;
+HWND hAgenda;
 HWND hNuevaCita;
 HWND hEditarCita;
 HWND hPagarCita;
@@ -56,7 +62,7 @@ void impresion();
 #pragma endregion
 
 #pragma region PrototipoFunciones Ventana
-BOOL CALLBACK menuPrincipal(HWND, UINT, WPARAM, LPARAM);
+BOOL CALLBACK agendaVentanaPrincipal(HWND, UINT, WPARAM, LPARAM);
 BOOL CALLBACK nuevaCita(HWND, UINT, WPARAM, LPARAM);
 BOOL CALLBACK editarCita(HWND, UINT, WPARAM, LPARAM);
 BOOL CALLBACK editarInfoDoctor(HWND, UINT, WPARAM, LPARAM);
@@ -68,10 +74,10 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrev, PSTR cmdLine, int cShow) {
 	origin = aux = NULL;
 	hInstGlobal = hInst;
 
-	hMenu = CreateDialog(hInst, MAKEINTRESOURCE(IDD_MENU), NULL, menuPrincipal);
+	hAgenda = CreateDialog(hInstGlobal, MAKEINTRESOURCE(IDD_AGENDA), NULL, agendaVentanaPrincipal);
 
-	ShowWindow(hMenu, SW_SHOW);
-	SetTimer(hMenu, TM_RELOJ, 1000, NULL);
+	ShowWindow(hAgenda, SW_SHOW);
+	SetTimer(hAgenda, TM_RELOJ, 1000, NULL);
 
 	MSG msg;
 	ZeroMemory(&msg, sizeof(MSG));
@@ -84,9 +90,16 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrev, PSTR cmdLine, int cShow) {
 }
 
 #pragma region FuncionesVentanas
-BOOL CALLBACK menuPrincipal(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+BOOL CALLBACK agendaVentanaPrincipal(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 	switch (msg) {
 	case WM_INITDIALOG: {
+		hBarraMenu = GetMenu(hwnd);
+		EnableMenuItem(hBarraMenu, BTN_AGENDA, MF_DISABLED);
+		EnableMenuItem(hBarraMenu, BTN_NUEVACITA, MF_ENABLED);
+		EnableMenuItem(hBarraMenu, BTN_EDITDOCINFO, MF_ENABLED);
+
+		ordenamiento();
+
 		hLbAgenda = GetDlgItem(hwnd, IDC_LISTACITAS);
 		impresion();
 
@@ -113,30 +126,33 @@ BOOL CALLBACK menuPrincipal(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 		if (LOWORD(wParam) == BTN_SALIR && HIWORD(wParam) == BN_CLICKED) {
 			exitApp = true;
 			KillTimer(hwnd, TM_RELOJ);
-			DestroyWindow(hMenu);
+			DestroyWindow(hAgenda);
 		}
 		if (LOWORD(wParam) == BTN_EDITDOCINFO && HIWORD(wParam) == BN_CLICKED) {
-			KillTimer(hMenu, TM_RELOJ);
-			DestroyWindow(hMenu);
+			KillTimer(hAgenda, TM_RELOJ);
+			DestroyWindow(hAgenda);
 			hEditarDoctor = CreateDialog(hInstGlobal, MAKEINTRESOURCE(IDD_EDITDOCTOR), NULL, editarInfoDoctor);
 			ShowWindow(hEditarDoctor, SW_SHOW);
 		}
 		if (LOWORD(wParam) == BTN_NUEVACITA && HIWORD(wParam) == BN_CLICKED) {
-			KillTimer(hMenu, TM_RELOJ);
-			DestroyWindow(hMenu);
+			KillTimer(hAgenda, TM_RELOJ);
+			DestroyWindow(hAgenda);
 			hNuevaCita = CreateDialog(hInstGlobal, MAKEINTRESOURCE(IDD_NUEVACITA), NULL, nuevaCita);
 			ShowWindow(hNuevaCita, SW_SHOW);
 			SetTimer(hNuevaCita, TM_NC_RELOJ, 1000, NULL);
 		}
 		if (LOWORD(wParam) == BTN_PAGARCITA && HIWORD(wParam) == BN_CLICKED) {
-			DestroyWindow(hMenu);
+			DestroyWindow(hAgenda);
 			hPagarCita = CreateDialog(hInstGlobal, MAKEINTRESOURCE(IDD_PAGOCITA), NULL, pagarCita);
 			ShowWindow(hPagarCita, SW_SHOW);
 		}
 		if (LOWORD(wParam) == BTN_EDITARCITA && HIWORD(wParam) == BN_CLICKED) {
-			DestroyWindow(hMenu);
+			DestroyWindow(hAgenda);
 			hEditarCita = CreateDialog(hInstGlobal, MAKEINTRESOURCE(IDD_EDITARCITA), NULL, editarCita);
 			ShowWindow(hEditarCita, SW_SHOW);
+		}
+		if (LOWORD(wParam) == BTN_ELIMINARCITA && HIWORD(wParam == BN_CLICKED)) {
+
 		}
 	}break;
 	case WM_TIMER: {
@@ -161,40 +177,43 @@ BOOL CALLBACK menuPrincipal(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 BOOL CALLBACK nuevaCita(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 	switch (msg) {
 	case WM_INITDIALOG: {
-			if (origin == NULL) {
-				origin = new CITA;
-				aux = origin;
-				aux->next = NULL;
-				aux->prev = NULL;
-			}
-			else {
-				while (aux->next != NULL) {
-					aux = aux->next;
-				}
-				aux->next = new CITA;
-				aux->next->prev = aux;
+		if (origin == NULL) {
+			origin = new CITA;
+			aux = origin;
+			aux->next = NULL;
+			aux->prev = NULL;
+		}
+		else {
+			while (aux->next != NULL) {
 				aux = aux->next;
-				aux->next = NULL;
 			}
+			aux->next = new CITA;
+			aux->next->prev = aux;
+			aux = aux->next;
+			aux->next = NULL;
+		}
 
-			HWND hCbEspecie = GetDlgItem(hwnd, CB_NC_ESPECIE);
-			SendMessage(hCbEspecie, CB_ADDSTRING, 0, (LPARAM)"Perro");
-			SendMessage(hCbEspecie, CB_ADDSTRING, 0, (LPARAM)"Gato");
-			SendMessage(hCbEspecie, CB_ADDSTRING, 0, (LPARAM)"Loro");
-			SendMessage(hCbEspecie, CB_ADDSTRING, 0, (LPARAM)"Tortuga");
-			SendMessage(hCbEspecie, CB_ADDSTRING, 0, (LPARAM)"Pez");
-			SendMessage(hCbEspecie, CB_ADDSTRING, 0, (LPARAM)"Lagarto");
+		hBarraMenu = GetMenu(hwnd);
+		EnableMenuItem(hBarraMenu, BTN_NUEVACITA, MF_DISABLED);
+		EnableMenuItem(hBarraMenu, BTN_AGENDA, MF_ENABLED);
+		EnableMenuItem(hBarraMenu, BTN_EDITDOCINFO, MF_ENABLED);
 
-			HWND hLblNombreMedicoNC = GetDlgItem(hwnd, ST_NC_DOCTOR);
-			HWND hLblCedulaNC = GetDlgItem(hwnd, ST_NC_CEDULA);
-			hLblReloj = GetDlgItem(hwnd, ST_NC_RELOJ);
-			SetWindowText(hLblNombreMedicoNC, nombreMedico);
-			SetWindowText(hLblCedulaNC, cedula);
+		HWND hCbEspecie = GetDlgItem(hwnd, CB_NC_ESPECIE);
+		SendMessage(hCbEspecie, CB_ADDSTRING, 0, (LPARAM)"Perro");
+		SendMessage(hCbEspecie, CB_ADDSTRING, 0, (LPARAM)"Gato");
+		SendMessage(hCbEspecie, CB_ADDSTRING, 0, (LPARAM)"Loro");
+		SendMessage(hCbEspecie, CB_ADDSTRING, 0, (LPARAM)"Tortuga");
+		SendMessage(hCbEspecie, CB_ADDSTRING, 0, (LPARAM)"Pez");
+		SendMessage(hCbEspecie, CB_ADDSTRING, 0, (LPARAM)"Lagarto");
+
+		HWND hLblNombreMedicoNC = GetDlgItem(hwnd, ST_NC_DOCTOR);
+		HWND hLblCedulaNC = GetDlgItem(hwnd, ST_NC_CEDULA);
+		hLblReloj = GetDlgItem(hwnd, ST_NC_RELOJ);
+		SetWindowText(hLblNombreMedicoNC, nombreMedico);
+		SetWindowText(hLblCedulaNC, cedula);
 	}break;
 	case WM_COMMAND: {
-		char buff[256];
-		char buffName[50];
-		if (LOWORD(wParam) == ID_NC_CANCELA && HIWORD(wParam) == BN_CLICKED) {
+		if (LOWORD(wParam) == BTN_SALIR && HIWORD(wParam) == BN_CLICKED) {
 			if (aux->next == NULL && aux->prev == NULL) {
 				delete aux;
 				aux = origin = NULL;
@@ -204,12 +223,46 @@ BOOL CALLBACK nuevaCita(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 				delete aux;
 				aux = origin;
 			}
+
+			exitApp = true;
+			KillTimer(hwnd, TM_NC_RELOJ);
+			DestroyWindow(hNuevaCita);
+		}
+		if (LOWORD(wParam) == BTN_AGENDA && HIWORD(wParam) == BN_CLICKED) {
+			if (aux->next == NULL && aux->prev == NULL) {
+				delete aux;
+				aux = origin = NULL;
+			}
+			else {
+				aux->prev->next = NULL;
+				delete aux;
+				aux = origin;
+			}
+
 			KillTimer(hNuevaCita, TM_NC_RELOJ);
 			DestroyWindow(hNuevaCita);
-			hMenu = CreateDialog(hInstGlobal, MAKEINTRESOURCE(IDD_MENU), NULL, menuPrincipal);
-			ShowWindow(hMenu, SW_SHOW);
-			SetTimer(hMenu, TM_RELOJ, 1000, NULL);
+			hAgenda = CreateDialog(hInstGlobal, MAKEINTRESOURCE(IDD_AGENDA), NULL, agendaVentanaPrincipal);
+			ShowWindow(hAgenda, SW_SHOW);
+			SetTimer(hAgenda, TM_RELOJ, 1000, NULL);
 		}
+		if (LOWORD(wParam) == BTN_EDITDOCINFO && HIWORD(wParam) == BN_CLICKED) {
+			if (aux->next == NULL && aux->prev == NULL) {
+				delete aux;
+				aux = origin = NULL;
+			}
+			else {
+				aux->prev->next = NULL;
+				delete aux;
+				aux = origin;
+			}
+
+			KillTimer(hNuevaCita, TM_NC_RELOJ);
+			DestroyWindow(hNuevaCita);
+			hEditarDoctor = CreateDialog(hInstGlobal, MAKEINTRESOURCE(IDD_EDITDOCTOR), NULL, editarInfoDoctor);
+			ShowWindow(hEditarDoctor, SW_SHOW);
+		}
+		char buff[256];
+		char buffName[50];
 		if (LOWORD(wParam) == IDOK && HIWORD(wParam) == BN_CLICKED) {
 			int length;
 			HWND hEdNombreD = GetDlgItem(hwnd, EDT_NC_DNOMBRE);
@@ -425,11 +478,9 @@ BOOL CALLBACK nuevaCita(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
 			KillTimer(hNuevaCita, TM_NC_RELOJ);
 			DestroyWindow(hNuevaCita);
-			hMenu = CreateDialog(hInstGlobal, MAKEINTRESOURCE(IDD_MENU), NULL, menuPrincipal);
-			ShowWindow(hMenu, SW_SHOW);
-			SetTimer(hMenu, TM_RELOJ, 1000, NULL);
-
-			ordenamiento();
+			hAgenda = CreateDialog(hInstGlobal, MAKEINTRESOURCE(IDD_AGENDA), NULL, agendaVentanaPrincipal);
+			ShowWindow(hAgenda, SW_SHOW);
+			SetTimer(hAgenda, TM_RELOJ, 1000, NULL);
 		}
 	}break;
 	case WM_TIMER: {
@@ -439,6 +490,11 @@ BOOL CALLBACK nuevaCita(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 		strftime(reloj, 80, "Hoy es: %d/%m/%Y  %I:%M:%S", tiempoActual);
 		SetWindowText(hLblReloj, reloj);
 	}break;
+	case WM_DESTROY:
+		if (exitApp) {
+			PostQuitMessage(0);
+		}
+		break;
 	}
 	return FALSE;
 }
@@ -446,6 +502,11 @@ BOOL CALLBACK nuevaCita(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 BOOL CALLBACK editarInfoDoctor(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 	switch (msg) {
 	case WM_INITDIALOG: {
+		hBarraMenu = GetMenu(hwnd);
+		EnableMenuItem(hBarraMenu, BTN_EDITDOCINFO, MF_DISABLED);
+		EnableMenuItem(hBarraMenu, BTN_AGENDA, MF_ENABLED);
+		EnableMenuItem(hBarraMenu, BTN_NUEVACITA, MF_ENABLED);
+
 		HWND hEdNombreMedico = GetDlgItem(hwnd, EDT_EDM_DOCTOR);
 		HWND hEdCedula = GetDlgItem(hwnd, EDT_EDM_CEDULA);
 		if (nombreMedico == "") {
@@ -458,11 +519,27 @@ BOOL CALLBACK editarInfoDoctor(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 		}
 	}break;
 	case WM_COMMAND:
+		if (LOWORD(wParam) == BTN_SALIR && HIWORD(wParam) == BN_CLICKED) {
+			exitApp = true;
+			DestroyWindow(hEditarDoctor);
+		}
+		if (LOWORD(wParam) == BTN_AGENDA && HIWORD(wParam) == BN_CLICKED) {
+			DestroyWindow(hEditarDoctor);
+			hAgenda = CreateDialog(hInstGlobal, MAKEINTRESOURCE(IDD_AGENDA), NULL, agendaVentanaPrincipal);
+			ShowWindow(hAgenda, SW_SHOW);
+			SetTimer(hAgenda, TM_RELOJ, 1000, NULL);
+		}
+		if (LOWORD(wParam) == BTN_NUEVACITA && HIWORD(wParam) == BN_CLICKED) {
+			DestroyWindow(hEditarDoctor);
+			hNuevaCita = CreateDialog(hInstGlobal, MAKEINTRESOURCE(IDD_NUEVACITA), NULL, nuevaCita);
+			ShowWindow(hNuevaCita, SW_SHOW);
+			SetTimer(hNuevaCita, TM_NC_RELOJ, 1000, NULL);
+		}
 		if (LOWORD(wParam) == ID_EDM_CANCELA && HIWORD(wParam) == BN_CLICKED) {
 			DestroyWindow(hEditarDoctor);
-			hMenu = CreateDialog(hInstGlobal, MAKEINTRESOURCE(IDD_MENU), NULL, menuPrincipal);
-			ShowWindow(hMenu, SW_SHOW);
-			SetTimer(hMenu, TM_RELOJ, 1000, NULL);
+			hAgenda = CreateDialog(hInstGlobal, MAKEINTRESOURCE(IDD_AGENDA), NULL, agendaVentanaPrincipal);
+			ShowWindow(hAgenda, SW_SHOW);
+			SetTimer(hAgenda, TM_RELOJ, 1000, NULL);
 			break;
 		}
 		if (LOWORD(wParam = ID_EDM_OK && HIWORD(wParam) == BN_CLICKED)) {
@@ -492,12 +569,16 @@ BOOL CALLBACK editarInfoDoctor(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 			}
 
 			DestroyWindow(hEditarDoctor);
-			hMenu = CreateDialog(hInstGlobal, MAKEINTRESOURCE(IDD_MENU), NULL, menuPrincipal);
-			ShowWindow(hMenu, SW_SHOW);
-			SetTimer(hMenu, TM_RELOJ, 1000, NULL);
+			hAgenda = CreateDialog(hInstGlobal, MAKEINTRESOURCE(IDD_AGENDA), NULL, agendaVentanaPrincipal);
+			ShowWindow(hAgenda, SW_SHOW);
+			SetTimer(hAgenda, TM_RELOJ, 1000, NULL);
 		}
 		break;
-	case WM_CLOSE:
+	case WM_DESTROY:
+		if (exitApp) {
+
+			PostQuitMessage(0);
+		}
 		break;
 	}
 	return FALSE;
@@ -508,8 +589,14 @@ BOOL CALLBACK pagarCita(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 	case WM_COMMAND:
 		if (LOWORD(wParam) == ID_PC_CANCELA && HIWORD(wParam) == BN_CLICKED) {
 			DestroyWindow(hPagarCita);
-			hMenu = CreateDialog(hInstGlobal, MAKEINTRESOURCE(IDD_MENU), NULL, menuPrincipal);
-			ShowWindow(hMenu, SW_SHOW);
+			hAgenda = CreateDialog(hInstGlobal, MAKEINTRESOURCE(IDD_AGENDA), NULL, agendaVentanaPrincipal);
+			ShowWindow(hAgenda, SW_SHOW);
+		}
+		break;
+	case WM_DESTROY:
+		if (exitApp) {
+
+			PostQuitMessage(0);
 		}
 		break;
 	}
@@ -521,8 +608,14 @@ BOOL CALLBACK editarCita(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 	case WM_COMMAND:
 		if (LOWORD(wParam) == ID_EC_CANCELA && HIWORD(wParam) == BN_CLICKED) {
 			DestroyWindow(hEditarCita);
-			hMenu = CreateDialog(hInstGlobal, MAKEINTRESOURCE(IDD_MENU), NULL, menuPrincipal);
-			ShowWindow(hMenu, SW_SHOW);
+			hAgenda = CreateDialog(hInstGlobal, MAKEINTRESOURCE(IDD_AGENDA), NULL, agendaVentanaPrincipal);
+			ShowWindow(hAgenda, SW_SHOW);
+		}
+		break;
+	case WM_DESTROY:
+		if (exitApp) {
+
+			PostQuitMessage(0);
 		}
 		break;
 	}
@@ -567,8 +660,6 @@ BOOL CALLBACK primerDoctor(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 			EndDialog(hwnd, 0);
 		}
 		break;
-	case WM_CLOSE:
-		break;
 	}
 	return FALSE;
 }
@@ -612,7 +703,7 @@ int countList() {
 void ordenamiento() {
 	CITA *auxActual, *auxProx;
 	auxActual = origin;
-	while (auxActual->next != NULL) {
+	while (auxActual != NULL) {
 		auxProx = auxActual->next;
 		while (auxProx != NULL) {
 			if (auxActual->year > auxProx->year) {
@@ -655,7 +746,7 @@ void ordenamiento() {
 				auxActual->formaPago = tPago;
 				auxActual->costo = tCosto;
 			}
-			else if (auxActual->year == auxProx->year && auxActual->month > auxProx->month) {
+			if (auxActual->year == auxProx->year && auxActual->month > auxProx->month) {
 				string tNombreD = auxProx->nombreDueño;
 				string tNombreM = auxProx->nombreMascota;
 				string tTel = auxProx->telefono;
@@ -695,7 +786,7 @@ void ordenamiento() {
 				auxActual->formaPago = tPago;
 				auxActual->costo = tCosto;
 			}
-			else if (auxActual->year == auxProx->year && auxActual->month == auxProx->month && auxActual->day > auxProx->day) {
+			if (auxActual->year == auxProx->year && auxActual->month == auxProx->month && auxActual->day > auxProx->day) {
 				string tNombreD = auxProx->nombreDueño;
 				string tNombreM = auxProx->nombreMascota;
 				string tTel = auxProx->telefono;
@@ -748,6 +839,9 @@ void impresion() {
 		string D = to_string(aux->day);
 		string H = to_string(aux->hour);
 		string Min = to_string(aux->minutes);
+		if (aux->minutes < 10) {
+			Min = "0" + Min;
+		}
 		string fecha = D + "/" + M + "/" + Y + "  " + H + ":" + Min;
 		string display = aux->nombreMascota + "   " + fecha;
 		char buffL[100];

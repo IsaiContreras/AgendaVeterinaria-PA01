@@ -2,23 +2,17 @@
 // Archivo de inclusión generado de Microsoft Visual C++.
 // Usado por AgendaVeterinaria WinAPI.rc
 //
-#define IDD_MENU                        101
+#define IDD_AGENDA                      101
 #define IDD_EDITDOCTOR                  103
 #define IDD_NUEVACITA                   105
 #define IDD_PAGOCITA                    107
 #define IDD_EDITARCITA                  108
 #define IDD_PRIMERDOCTOR                109
-#define IDR_MENU1                       118
-#define BTN_SALIR                       1001
+#define IDR_MENU1                       123
 #define BMP_MENU_DOCTOR                 1002
 #define ST_MENU_DOCTOR                  1003
 #define ST_MENU_CEDULA                  1004
-#define BTN_EDITDOCINFO                 1005
 #define IDC_LISTACITAS                  1006
-#define BTN_NUEVACITA                   1007
-#define BTN_EDITARCITA                  1008
-#define BTN_ELIMINARCITA                1009
-#define BTN_PAGARCITA                   1010
 #define EDT_EDM_DOCTOR                  1011
 #define EDT_EDM_CEDULA                  1012
 #define BTN_EDM_DOCTOR                  1013
@@ -70,14 +64,21 @@
 #define ST_NC_RELOJ                     1075
 #define ID_EDM_OK                       1076
 #define ID_PM_OK                        1077
+#define BTN_EDITARCITA                  40036
+#define BTN_PAGARCITA                   40038
+#define BTN_ELIMINARCITA                40040
+#define BTN_SALIR                       40046
+#define BTN_EDITDOCINFO                 40047
+#define BTN_NUEVACITA                   40048
+#define BTN_AGENDA                      40049
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        119
-#define _APS_NEXT_COMMAND_VALUE         40018
-#define _APS_NEXT_CONTROL_VALUE         1078
+#define _APS_NEXT_RESOURCE_VALUE        124
+#define _APS_NEXT_COMMAND_VALUE         40050
+#define _APS_NEXT_CONTROL_VALUE         1081
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

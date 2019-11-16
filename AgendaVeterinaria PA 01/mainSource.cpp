@@ -7,6 +7,7 @@ using namespace std;
 #define TM_RELOJ 3000
 #define TM_NC_RELOJ 3001
 
+#pragma region VariablesGlobales
 HINSTANCE hInstGlobal;
 HWND hMenu;
 HWND hNuevaCita;
@@ -44,19 +45,24 @@ char nombreMedico[50] = {NULL};
 char cedula[20] = {NULL};
 
 bool exitApp = false;
+#pragma endregion
 
+#pragma region PrototipoFunciones
 bool verificarNum(string c);
 bool verificarAlfa(string c);
 int countList();
 void ordenamiento();
 void impresion();
+#pragma endregion
 
+#pragma region PrototipoFunciones Ventana
 BOOL CALLBACK menuPrincipal(HWND, UINT, WPARAM, LPARAM);
 BOOL CALLBACK nuevaCita(HWND, UINT, WPARAM, LPARAM);
 BOOL CALLBACK editarCita(HWND, UINT, WPARAM, LPARAM);
 BOOL CALLBACK editarInfoDoctor(HWND, UINT, WPARAM, LPARAM);
 BOOL CALLBACK pagarCita(HWND, UINT, WPARAM, LPARAM);
 BOOL CALLBACK primerDoctor(HWND, UINT, WPARAM, LPARAM);
+#pragma endregion
 
 int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrev, PSTR cmdLine, int cShow) {
 	origin = aux = NULL;
@@ -77,6 +83,7 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrev, PSTR cmdLine, int cShow) {
 	return 0;
 }
 
+#pragma region FuncionesVentanas
 BOOL CALLBACK menuPrincipal(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 	switch (msg) {
 	case WM_INITDIALOG: {
@@ -565,7 +572,9 @@ BOOL CALLBACK primerDoctor(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 	}
 	return FALSE;
 }
+#pragma endregion
 
+#pragma region Funciones
 bool verificarNum(string c) {
 	bool r = false;
 	int n = c.size();
@@ -602,7 +611,6 @@ int countList() {
 
 void ordenamiento() {
 	CITA *auxActual, *auxProx;
-	
 	auxActual = origin;
 	while (auxActual->next != NULL) {
 		auxProx = auxActual->next;
@@ -617,6 +625,7 @@ void ordenamiento() {
 				int tM = auxProx->month;
 				int tD = auxProx->day;
 				int tH = auxProx->hour;
+				int tMin = auxProx->minutes;
 				int tPago = auxProx->formaPago;
 				float tCosto = auxProx->costo;
 
@@ -629,6 +638,7 @@ void ordenamiento() {
 				auxProx->month = auxActual->month;
 				auxProx->day = auxActual->day;
 				auxProx->hour = auxActual->hour;
+				auxProx->minutes = auxActual->minutes;
 				auxProx->formaPago = auxActual->formaPago;
 				auxProx->costo = auxActual->costo;
 
@@ -641,6 +651,7 @@ void ordenamiento() {
 				auxActual->month = tM;
 				auxActual->day = tD;
 				auxActual->hour = tH;
+				auxActual->minutes = auxProx->minutes;
 				auxActual->formaPago = tPago;
 				auxActual->costo = tCosto;
 			}
@@ -654,6 +665,7 @@ void ordenamiento() {
 				int tM = auxProx->month;
 				int tD = auxProx->day;
 				int tH = auxProx->hour;
+				int tMin = auxProx->minutes;
 				int tPago = auxProx->formaPago;
 				float tCosto = auxProx->costo;
 
@@ -666,6 +678,7 @@ void ordenamiento() {
 				auxProx->month = auxActual->month;
 				auxProx->day = auxActual->day;
 				auxProx->hour = auxActual->hour;
+				auxProx->minutes = auxActual->minutes;
 				auxProx->formaPago = auxActual->formaPago;
 				auxProx->costo = auxActual->costo;
 
@@ -678,6 +691,7 @@ void ordenamiento() {
 				auxActual->month = tM;
 				auxActual->day = tD;
 				auxActual->hour = tH;
+				auxActual->minutes = auxProx->minutes;
 				auxActual->formaPago = tPago;
 				auxActual->costo = tCosto;
 			}
@@ -691,6 +705,7 @@ void ordenamiento() {
 				int tM = auxProx->month;
 				int tD = auxProx->day;
 				int tH = auxProx->hour;
+				int tMin = auxProx->minutes;
 				int tPago = auxProx->formaPago;
 				float tCosto = auxProx->costo;
 
@@ -703,6 +718,7 @@ void ordenamiento() {
 				auxProx->month = auxActual->month;
 				auxProx->day = auxActual->day;
 				auxProx->hour = auxActual->hour;
+				auxProx->minutes = auxActual->minutes;
 				auxProx->formaPago = auxActual->formaPago;
 				auxProx->costo = auxActual->costo;
 
@@ -715,6 +731,7 @@ void ordenamiento() {
 				auxActual->month = tM;
 				auxActual->day = tD;
 				auxActual->hour = tH;
+				auxActual->minutes = auxProx->minutes;
 				auxActual->formaPago = tPago;
 				auxActual->costo = tCosto;
 			}
@@ -730,7 +747,8 @@ void impresion() {
 		string M = to_string(aux->month);
 		string D = to_string(aux->day);
 		string H = to_string(aux->hour);
-		string fecha = D + "/" + M + "/" + Y + "  " + H + ":00";
+		string Min = to_string(aux->minutes);
+		string fecha = D + "/" + M + "/" + Y + "  " + H + ":" + Min;
 		string display = aux->nombreMascota + "   " + fecha;
 		char buffL[100];
 		strcpy(buffL, display.c_str());
@@ -740,3 +758,4 @@ void impresion() {
 	}
 	aux = origin;
 }
+#pragma endregion

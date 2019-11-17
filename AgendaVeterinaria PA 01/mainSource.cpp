@@ -54,8 +54,8 @@ bool exitApp = false;
 #pragma endregion
 
 #pragma region PrototipoFunciones
-bool verificarNum(string c);
-bool verificarAlfa(string c);
+bool verificarNum(string);
+bool verificarAlfa(string);
 int countList();
 void ordenamiento();
 void impresion();
@@ -127,6 +127,60 @@ BOOL CALLBACK agendaVentanaPrincipal(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
 			exitApp = true;
 			KillTimer(hwnd, TM_RELOJ);
 			DestroyWindow(hAgenda);
+		}
+		if (LOWORD(wParam) == BTN_SELECT && HIWORD(wParam) == BN_CLICKED) {
+			int index = SendMessage(hLbAgenda, LB_GETCURSEL, 0, 0);
+			if (index > -1) {
+				char buffer[80];
+				SendMessage(hLbAgenda, LB_GETTEXT, index, (LPARAM)buffer);
+				string cita(buffer);
+
+				int n = cita.size();
+				int toNum = -1;
+				for (int i = 0; i < n; i++) {
+					toNum++;
+					if (cita[i] >= 48 && cita[i] <= 57) {
+						break;
+					}
+				}
+
+				string D = cita.substr(toNum, 2);
+				string M = cita.substr(toNum + 3, 2);
+				string Y = cita.substr(toNum + 6, 4);
+				string H = cita.substr(toNum + 12, 2);
+				string Min = cita.substr(toNum + 15, 2);
+				int year = stoi(Y);
+				int month = stoi(M);
+				int day = stoi(D);
+				int hour = stoi(H);
+				int min = stoi(Min);
+
+				aux = origin;
+				while (aux != NULL) {
+					if (year == aux->year) {
+						if (month == aux->month) {
+							if (day == aux->day) {
+								if (hour == aux->hour) {
+									if (min == aux->minutes) {
+										found = true;
+										break;
+									}
+								}
+							}
+						}
+					}
+					aux = aux->next;
+				}
+
+
+
+				HWND hBtnEdit = GetDlgItem(hwnd, BTN_EDITARCITA);
+				HWND hBtnPagar = GetDlgItem(hwnd, BTN_PAGARCITA);
+				HWND hBtnEliminar = GetDlgItem(hwnd, BTN_ELIMINARCITA);
+				EnableWindow(hBtnEdit, true);
+				EnableWindow(hBtnPagar, true);
+				EnableWindow(hBtnEliminar, true);
+			}
 		}
 		if (LOWORD(wParam) == BTN_EDITDOCINFO && HIWORD(wParam) == BN_CLICKED) {
 			KillTimer(hAgenda, TM_RELOJ);
@@ -286,7 +340,7 @@ BOOL CALLBACK nuevaCita(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 			HWND hEdTel = GetDlgItem(hwnd, EDT_NC_TELEFONO);
 			length = GetWindowTextLength(hEdTel);
 			if (length > 0) {
-				if (length == 8 || length == 10) {
+				if (length == 8 || length == 10 || length == 12) {
 					GetWindowText(hEdTel, buff, length + 1);
 					string s(buff);
 					aux->telefono = s;
@@ -444,7 +498,7 @@ BOOL CALLBACK nuevaCita(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 				GetWindowText(hEdCosto, buff, length + 1);
 				string s(buff);
 				if (verificarAlfa(s)) {
-					MessageBox(hwnd, "El costo no debe contener letras.", "AVISO", MB_ICONEXCLAMATION);
+					MessageBox(hwnd, "El costo no debe contener letras o más de un punto decimal. Corrija.", "AVISO", MB_ICONEXCLAMATION);
 					break;
 				}
 				else {
@@ -681,10 +735,18 @@ bool verificarNum(string c) {
 bool verificarAlfa(string c) {
 	bool r = false;
 	int n = c.size();
+	int dots = 0;
 	for (int i = 0; i < n; i++) {
-		if (c[i] == 47 && c[i] <= 45 && c[i] >= 58) {
+		if (c[i] < 47 && c[i] > 58) {
 			r = true;
 			break;
+		}
+		if (c[i] == 46) {
+			dots++;
+			if (dots == 2) {
+				r = true;
+				break;
+			}
 		}
 	}
 	return r;
@@ -839,6 +901,9 @@ void impresion() {
 		string D = to_string(aux->day);
 		string H = to_string(aux->hour);
 		string Min = to_string(aux->minutes);
+		if (aux->hour < 10) {
+			H = "0" + H;
+		}
 		if (aux->minutes < 10) {
 			Min = "0" + Min;
 		}

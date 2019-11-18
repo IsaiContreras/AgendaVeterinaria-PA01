@@ -65,6 +65,15 @@
 #define ID_EDM_OK                       1076
 #define ID_PM_OK                        1077
 #define BTN_SELECT                      1081
+#define ST_INFO_MASCOTA                 1082
+#define ST_INFO_ESPECIE                 1083
+#define ST_INFO_DUENO                   1084
+#define ST_INFO_TELEFONO                1085
+#define ST_INFO_FECHA                   1087
+#define ST_INFO_COSTO                   1088
+#define ST_INFO_MOTIVO                  1089
+#define BMP_MENU_MASCOTA1               1090
+#define BMP_MENU_MASCOTA2               1091
 #define BTN_EDITARCITA                  40036
 #define BTN_PAGARCITA                   40038
 #define BTN_ELIMINARCITA                40040
@@ -79,7 +88,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        124
 #define _APS_NEXT_COMMAND_VALUE         40050
-#define _APS_NEXT_CONTROL_VALUE         1082
+#define _APS_NEXT_CONTROL_VALUE         1092
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

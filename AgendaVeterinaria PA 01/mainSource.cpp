@@ -37,6 +37,8 @@ struct CITA {
 	string especie;
 	string motivoConsulta;
 	string image[2];
+	string fechaString;
+	string horaString;
 	int year;
 	int month;
 	int day;
@@ -162,7 +164,6 @@ BOOL CALLBACK agendaVentanaPrincipal(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
 							if (day == aux->day) {
 								if (hour == aux->hour) {
 									if (min == aux->minutes) {
-										found = true;
 										break;
 									}
 								}
@@ -172,7 +173,23 @@ BOOL CALLBACK agendaVentanaPrincipal(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
 					aux = aux->next;
 				}
 
+				HWND hStMascota = GetDlgItem(hwnd, ST_INFO_MASCOTA);
+				strcpy(buffer, aux->nombreMascota.c_str());
+				SetWindowText(hStMascota, buffer);
 
+				HWND hStEspecie = GetDlgItem(hwnd, ST_INFO_ESPECIE);
+				strcpy(buffer, aux->especie.c_str());
+				SetWindowText(hStEspecie, buffer);
+
+				HWND hStDueno = GetDlgItem(hwnd, ST_INFO_DUENO);
+				strcpy(buffer, aux->nombreDueño.c_str());
+				SetWindowText(hStDueno, buffer);
+
+				HWND hStTelefono = GetDlgItem(hwnd, ST_INFO_TELEFONO);
+				strcpy(buffer, aux->telefono.c_str());
+				SetWindowText(hStTelefono, buffer);
+
+				
 
 				HWND hBtnEdit = GetDlgItem(hwnd, BTN_EDITARCITA);
 				HWND hBtnPagar = GetDlgItem(hwnd, BTN_PAGARCITA);
@@ -315,9 +332,9 @@ BOOL CALLBACK nuevaCita(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 			hEditarDoctor = CreateDialog(hInstGlobal, MAKEINTRESOURCE(IDD_EDITDOCTOR), NULL, editarInfoDoctor);
 			ShowWindow(hEditarDoctor, SW_SHOW);
 		}
-		char buff[256];
-		char buffName[50];
 		if (LOWORD(wParam) == IDOK && HIWORD(wParam) == BN_CLICKED) {
+			char buff[256];
+			char buffName[50];
 			int length;
 			HWND hEdNombreD = GetDlgItem(hwnd, EDT_NC_DNOMBRE);
 			length = GetWindowTextLength(hEdNombreD);
@@ -397,14 +414,35 @@ BOOL CALLBACK nuevaCita(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 			GetWindowText(hTpHora, buff, 15);
 			string h(buff);
 			string I = h.substr(0, 2);
-			string amPm = h.substr(9, 1);
 			string min = h.substr(3, 2);
+			string amPm = h.substr(9, 1);
+			
+			CITA *auxS = origin;
+			bool fechaRepetida = false;
+			while (auxS != NULL) {
+				if (auxS->fechaString == f) {
+					if (auxS->horaString == h) {
+						fechaRepetida = true;
+						break;
+					}
+				}
+				auxS = auxS->next;
+			}
+
+			if (fechaRepetida) {
+				MessageBox(hwnd, "La fecha y hora de la cita ya no está disponible. Ya existe otra cita en este horario.", "AVISO", MB_ICONEXCLAMATION);
+				break;
+			}
+
+			aux->fechaString = f;
+			aux->horaString = h;
 
 			int yearComp = stoi(Y);
 			int monthComp = stoi(m);
 			int dayComp = stoi(d);
 			int hourComp = stoi(I);
 			int minuteComp = stoi(min);
+
 			if (yearComp >= tiempoActual->tm_year + 1900) {
 				if (yearComp == tiempoActual->tm_year + 1900) {
 					if (monthComp >= tiempoActual->tm_mon + 1) {
@@ -412,7 +450,12 @@ BOOL CALLBACK nuevaCita(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 							if (dayComp >= tiempoActual->tm_mday) {
 								if (dayComp == tiempoActual->tm_mday) {
 									if (amPm == "p") {
-										hourComp += 12;
+										if (hourComp != 12) {
+											hourComp += 12;
+										}
+									}
+									if (amPm == "a" && hourComp == 12) {
+										hourComp -= 12;
 									}
 									if (hourComp >= tiempoActual->tm_hour) {
 										if (hourComp == tiempoActual->tm_hour) {
@@ -896,19 +939,7 @@ void ordenamiento() {
 
 void impresion() {
 	while (aux != NULL) {
-		string Y = to_string(aux->year);
-		string M = to_string(aux->month);
-		string D = to_string(aux->day);
-		string H = to_string(aux->hour);
-		string Min = to_string(aux->minutes);
-		if (aux->hour < 10) {
-			H = "0" + H;
-		}
-		if (aux->minutes < 10) {
-			Min = "0" + Min;
-		}
-		string fecha = D + "/" + M + "/" + Y + "  " + H + ":" + Min;
-		string display = aux->nombreMascota + "   " + fecha;
+		string display = aux->nombreMascota + "  |  " + aux->fechaString + "  |  " + aux->horaString;
 		char buffL[100];
 		strcpy(buffL, display.c_str());
 		SendMessage(hLbAgenda, LB_ADDSTRING, 0, (LPARAM)buffL);

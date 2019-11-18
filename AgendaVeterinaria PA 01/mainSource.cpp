@@ -138,36 +138,22 @@ BOOL CALLBACK agendaVentanaPrincipal(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
 				string cita(buffer);
 
 				int n = cita.size();
-				int toNum = -1;
+				int toFirstNumStr = -1;
 				for (int i = 0; i < n; i++) {
-					toNum++;
+					toFirstNumStr++;
 					if (cita[i] >= 48 && cita[i] <= 57) {
 						break;
 					}
 				}
 
-				string D = cita.substr(toNum, 2);
-				string M = cita.substr(toNum + 3, 2);
-				string Y = cita.substr(toNum + 6, 4);
-				string H = cita.substr(toNum + 12, 2);
-				string Min = cita.substr(toNum + 15, 2);
-				int year = stoi(Y);
-				int month = stoi(M);
-				int day = stoi(D);
-				int hour = stoi(H);
-				int min = stoi(Min);
+				string fechaLista = cita.substr(toFirstNumStr, 10);
+				string horaLista = cita.substr(toFirstNumStr + 15, 14);
 
 				aux = origin;
 				while (aux != NULL) {
-					if (year == aux->year) {
-						if (month == aux->month) {
-							if (day == aux->day) {
-								if (hour == aux->hour) {
-									if (min == aux->minutes) {
-										break;
-									}
-								}
-							}
+					if (fechaLista.compare(aux->fechaString) == 0) {
+						if (horaLista.compare(aux->horaString) == 0) {
+							break;
 						}
 					}
 					aux = aux->next;
@@ -189,7 +175,19 @@ BOOL CALLBACK agendaVentanaPrincipal(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
 				strcpy(buffer, aux->telefono.c_str());
 				SetWindowText(hStTelefono, buffer);
 
-				
+				HWND hStFechaHora = GetDlgItem(hwnd, ST_INFO_FECHA);
+				string infoFechaHora = aux->fechaString + " a las " + aux->horaString;
+				strcpy(buffer, infoFechaHora.c_str());
+				SetWindowText(hStFechaHora, buffer);
+
+				HWND hStCosto = GetDlgItem(hwnd, ST_INFO_COSTO);
+				string costo = to_string(aux->costo);
+				strcpy(buffer, costo.c_str());
+				SetWindowText(hStCosto, buffer);
+
+				HWND hStMotivo = GetDlgItem(hwnd, ST_INFO_MOTIVO);
+				strcpy(buffer, aux->motivoConsulta.c_str());
+				SetWindowText(hStMotivo, buffer);
 
 				HWND hBtnEdit = GetDlgItem(hwnd, BTN_EDITARCITA);
 				HWND hBtnPagar = GetDlgItem(hwnd, BTN_PAGARCITA);
@@ -197,6 +195,7 @@ BOOL CALLBACK agendaVentanaPrincipal(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
 				EnableWindow(hBtnEdit, true);
 				EnableWindow(hBtnPagar, true);
 				EnableWindow(hBtnEliminar, true);
+
 			}
 		}
 		if (LOWORD(wParam) == BTN_EDITDOCINFO && HIWORD(wParam) == BN_CLICKED) {
@@ -206,6 +205,7 @@ BOOL CALLBACK agendaVentanaPrincipal(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
 			ShowWindow(hEditarDoctor, SW_SHOW);
 		}
 		if (LOWORD(wParam) == BTN_NUEVACITA && HIWORD(wParam) == BN_CLICKED) {
+			aux = origin;
 			KillTimer(hAgenda, TM_RELOJ);
 			DestroyWindow(hAgenda);
 			hNuevaCita = CreateDialog(hInstGlobal, MAKEINTRESOURCE(IDD_NUEVACITA), NULL, nuevaCita);
@@ -279,9 +279,10 @@ BOOL CALLBACK nuevaCita(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
 		HWND hLblNombreMedicoNC = GetDlgItem(hwnd, ST_NC_DOCTOR);
 		HWND hLblCedulaNC = GetDlgItem(hwnd, ST_NC_CEDULA);
-		hLblReloj = GetDlgItem(hwnd, ST_NC_RELOJ);
 		SetWindowText(hLblNombreMedicoNC, nombreMedico);
 		SetWindowText(hLblCedulaNC, cedula);
+
+		hLblReloj = GetDlgItem(hwnd, ST_NC_RELOJ);
 	}break;
 	case WM_COMMAND: {
 		if (LOWORD(wParam) == BTN_SALIR && HIWORD(wParam) == BN_CLICKED) {
@@ -363,7 +364,7 @@ BOOL CALLBACK nuevaCita(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 					aux->telefono = s;
 				}
 				else {
-					MessageBox(hwnd, "El teléfono debe ser de 8 o 10 caracteres.", "AVISO", MB_ICONEXCLAMATION);
+					MessageBox(hwnd, "El teléfono debe ser de 8, 10 o 12 caracteres.", "AVISO", MB_ICONEXCLAMATION);
 					break;
 				}
 			}
@@ -416,33 +417,37 @@ BOOL CALLBACK nuevaCita(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 			string I = h.substr(0, 2);
 			string min = h.substr(3, 2);
 			string amPm = h.substr(9, 1);
-			
-			CITA *auxS = origin;
+			string stdHour;
+			//VALIDACIÓN DE FECHA NO REPETIDA
+			if (amPm == "p") {
+				stdHour = I + ":" + min + " P.M.";
+			}
+			else {
+				stdHour = I + ":" + min + " A.M.";
+			}
+			CITA *auxCF = origin;
 			bool fechaRepetida = false;
-			while (auxS != NULL) {
-				if (auxS->fechaString == f) {
-					if (auxS->horaString == h) {
+			while (auxCF != NULL) {
+				if (f.compare(auxCF->fechaString) == 0) {
+					if (stdHour.compare(auxCF->horaString) == 0) {
 						fechaRepetida = true;
 						break;
 					}
 				}
-				auxS = auxS->next;
+				auxCF = auxCF->next;
 			}
-
 			if (fechaRepetida) {
 				MessageBox(hwnd, "La fecha y hora de la cita ya no está disponible. Ya existe otra cita en este horario.", "AVISO", MB_ICONEXCLAMATION);
 				break;
 			}
-
 			aux->fechaString = f;
-			aux->horaString = h;
-
+			aux->horaString = stdHour;
+			//VALIDCIÓN DE FECHA NO ANTIGUA
 			int yearComp = stoi(Y);
 			int monthComp = stoi(m);
 			int dayComp = stoi(d);
 			int hourComp = stoi(I);
 			int minuteComp = stoi(min);
-
 			if (yearComp >= tiempoActual->tm_year + 1900) {
 				if (yearComp == tiempoActual->tm_year + 1900) {
 					if (monthComp >= tiempoActual->tm_mon + 1) {
@@ -485,6 +490,14 @@ BOOL CALLBACK nuevaCita(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 									}
 								}
 								else {
+									if (amPm == "p") {
+										if (hourComp != 12) {
+											hourComp += 12;
+										}
+									}
+									if (amPm == "a" && hourComp == 12) {
+										hourComp -= 12;
+									}
 									aux->year = yearComp;
 									aux->month = monthComp;
 									aux->day = dayComp;
@@ -498,6 +511,14 @@ BOOL CALLBACK nuevaCita(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 							}
 						}
 						else {
+							if (amPm == "p") {
+								if (hourComp != 12) {
+									hourComp += 12;
+								}
+							}
+							if (amPm == "a" && hourComp == 12) {
+								hourComp -= 12;
+							}
 							aux->year = yearComp;
 							aux->month = monthComp;
 							aux->day = dayComp;
@@ -511,6 +532,14 @@ BOOL CALLBACK nuevaCita(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 					}
 				}
 				else {
+					if (amPm == "p") {
+						if (hourComp != 12) {
+							hourComp += 12;
+						}
+					}
+					if (amPm == "a" && hourComp == 12) {
+						hourComp -= 12;
+					}
 					aux->year = yearComp;
 					aux->month = monthComp;
 					aux->day = dayComp;
@@ -817,6 +846,8 @@ void ordenamiento() {
 				string tTel = auxProx->telefono;
 				string tEsp = auxProx->especie;
 				string tMotivo = auxProx->motivoConsulta;
+				string tFechaStr = auxProx->fechaString;
+				string tHoraStr = auxProx->horaString;
 				int tY = auxProx->year;
 				int tM = auxProx->month;
 				int tD = auxProx->day;
@@ -830,6 +861,8 @@ void ordenamiento() {
 				auxProx->telefono = auxActual->telefono;
 				auxProx->especie = auxActual->especie;
 				auxProx->motivoConsulta = auxActual->motivoConsulta;
+				auxProx->fechaString = auxActual->fechaString;
+				auxProx->horaString = auxActual->horaString;
 				auxProx->year = auxActual->year;
 				auxProx->month = auxActual->month;
 				auxProx->day = auxActual->day;
@@ -843,6 +876,8 @@ void ordenamiento() {
 				auxActual->telefono = tTel;
 				auxActual->especie = tEsp;
 				auxActual->motivoConsulta = tMotivo;
+				auxActual->fechaString = tFechaStr;
+				auxActual->horaString = tHoraStr;
 				auxActual->year = tY;
 				auxActual->month = tM;
 				auxActual->day = tD;
@@ -857,6 +892,8 @@ void ordenamiento() {
 				string tTel = auxProx->telefono;
 				string tEsp = auxProx->especie;
 				string tMotivo = auxProx->motivoConsulta;
+				string tFechaStr = auxProx->fechaString;
+				string tHoraStr = auxProx->horaString;
 				int tY = auxProx->year;
 				int tM = auxProx->month;
 				int tD = auxProx->day;
@@ -870,6 +907,8 @@ void ordenamiento() {
 				auxProx->telefono = auxActual->telefono;
 				auxProx->especie = auxActual->especie;
 				auxProx->motivoConsulta = auxActual->motivoConsulta;
+				auxProx->fechaString = auxActual->fechaString;
+				auxProx->horaString = auxActual->horaString;
 				auxProx->year = auxActual->year;
 				auxProx->month = auxActual->month;
 				auxProx->day = auxActual->day;
@@ -883,6 +922,8 @@ void ordenamiento() {
 				auxActual->telefono = tTel;
 				auxActual->especie = tEsp;
 				auxActual->motivoConsulta = tMotivo;
+				auxActual->fechaString = tFechaStr;
+				auxActual->horaString = tHoraStr;
 				auxActual->year = tY;
 				auxActual->month = tM;
 				auxActual->day = tD;
@@ -897,6 +938,8 @@ void ordenamiento() {
 				string tTel = auxProx->telefono;
 				string tEsp = auxProx->especie;
 				string tMotivo = auxProx->motivoConsulta;
+				string tFechaStr = auxProx->fechaString;
+				string tHoraStr = auxProx->horaString;
 				int tY = auxProx->year;
 				int tM = auxProx->month;
 				int tD = auxProx->day;
@@ -910,6 +953,8 @@ void ordenamiento() {
 				auxProx->telefono = auxActual->telefono;
 				auxProx->especie = auxActual->especie;
 				auxProx->motivoConsulta = auxActual->motivoConsulta;
+				auxProx->fechaString = auxActual->fechaString;
+				auxProx->horaString = auxActual->horaString;
 				auxProx->year = auxActual->year;
 				auxProx->month = auxActual->month;
 				auxProx->day = auxActual->day;
@@ -923,6 +968,100 @@ void ordenamiento() {
 				auxActual->telefono = tTel;
 				auxActual->especie = tEsp;
 				auxActual->motivoConsulta = tMotivo;
+				auxActual->fechaString = tFechaStr;
+				auxActual->horaString = tHoraStr;
+				auxActual->year = tY;
+				auxActual->month = tM;
+				auxActual->day = tD;
+				auxActual->hour = tH;
+				auxActual->minutes = auxProx->minutes;
+				auxActual->formaPago = tPago;
+				auxActual->costo = tCosto;
+			}
+			if (auxActual->year == auxProx->year && auxActual->month == auxProx->month && auxActual->day == auxProx->day && auxActual->hour > auxProx->hour) {
+				string tNombreD = auxProx->nombreDueño;
+				string tNombreM = auxProx->nombreMascota;
+				string tTel = auxProx->telefono;
+				string tEsp = auxProx->especie;
+				string tMotivo = auxProx->motivoConsulta;
+				string tFechaStr = auxProx->fechaString;
+				string tHoraStr = auxProx->horaString;
+				int tY = auxProx->year;
+				int tM = auxProx->month;
+				int tD = auxProx->day;
+				int tH = auxProx->hour;
+				int tMin = auxProx->minutes;
+				int tPago = auxProx->formaPago;
+				float tCosto = auxProx->costo;
+
+				auxProx->nombreDueño = auxActual->nombreDueño;
+				auxProx->nombreMascota = auxActual->nombreMascota;
+				auxProx->telefono = auxActual->telefono;
+				auxProx->especie = auxActual->especie;
+				auxProx->motivoConsulta = auxActual->motivoConsulta;
+				auxProx->fechaString = auxActual->fechaString;
+				auxProx->horaString = auxActual->horaString;
+				auxProx->year = auxActual->year;
+				auxProx->month = auxActual->month;
+				auxProx->day = auxActual->day;
+				auxProx->hour = auxActual->hour;
+				auxProx->minutes = auxActual->minutes;
+				auxProx->formaPago = auxActual->formaPago;
+				auxProx->costo = auxActual->costo;
+
+				auxActual->nombreDueño = tNombreD;
+				auxActual->nombreMascota = tNombreM;
+				auxActual->telefono = tTel;
+				auxActual->especie = tEsp;
+				auxActual->motivoConsulta = tMotivo;
+				auxActual->fechaString = tFechaStr;
+				auxActual->horaString = tHoraStr;
+				auxActual->year = tY;
+				auxActual->month = tM;
+				auxActual->day = tD;
+				auxActual->hour = tH;
+				auxActual->minutes = auxProx->minutes;
+				auxActual->formaPago = tPago;
+				auxActual->costo = tCosto;
+			}
+			if (auxActual->year == auxProx->year && auxActual->month == auxProx->month && auxActual->day == auxProx->day && auxActual->hour == auxProx->hour && auxActual->minutes > auxProx->minutes) {
+				string tNombreD = auxProx->nombreDueño;
+				string tNombreM = auxProx->nombreMascota;
+				string tTel = auxProx->telefono;
+				string tEsp = auxProx->especie;
+				string tMotivo = auxProx->motivoConsulta;
+				string tFechaStr = auxProx->fechaString;
+				string tHoraStr = auxProx->horaString;
+				int tY = auxProx->year;
+				int tM = auxProx->month;
+				int tD = auxProx->day;
+				int tH = auxProx->hour;
+				int tMin = auxProx->minutes;
+				int tPago = auxProx->formaPago;
+				float tCosto = auxProx->costo;
+
+				auxProx->nombreDueño = auxActual->nombreDueño;
+				auxProx->nombreMascota = auxActual->nombreMascota;
+				auxProx->telefono = auxActual->telefono;
+				auxProx->especie = auxActual->especie;
+				auxProx->motivoConsulta = auxActual->motivoConsulta;
+				auxProx->fechaString = auxActual->fechaString;
+				auxProx->horaString = auxActual->horaString;
+				auxProx->year = auxActual->year;
+				auxProx->month = auxActual->month;
+				auxProx->day = auxActual->day;
+				auxProx->hour = auxActual->hour;
+				auxProx->minutes = auxActual->minutes;
+				auxProx->formaPago = auxActual->formaPago;
+				auxProx->costo = auxActual->costo;
+
+				auxActual->nombreDueño = tNombreD;
+				auxActual->nombreMascota = tNombreM;
+				auxActual->telefono = tTel;
+				auxActual->especie = tEsp;
+				auxActual->motivoConsulta = tMotivo;
+				auxActual->fechaString = tFechaStr;
+				auxActual->horaString = tHoraStr;
 				auxActual->year = tY;
 				auxActual->month = tM;
 				auxActual->day = tD;

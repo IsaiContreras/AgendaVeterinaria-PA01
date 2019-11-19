@@ -27,6 +27,9 @@ HWND hLblReloj;
 HWND hLblNombreMedico;
 HWND hLblCedula;
 
+HWND hPcFotoDoctor;
+HBITMAP hBmpDoctor;
+
 time_t allTime;
 struct tm *tiempoActual;
 
@@ -53,6 +56,8 @@ struct CITA {
 
 char nombreMedico[50] = {NULL};
 char cedula[20] = {NULL};
+char chDirFotoDoc[MAX_PATH] = "";
+char chCambioFoto[MAX_PATH] = "";
 bool salida = false;
 #pragma endregion
 
@@ -118,6 +123,9 @@ BOOL CALLBACK agendaVentanaPrincipal(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
 		else {
 			int primerDoc = DialogBox(hInstGlobal, MAKEINTRESOURCE(IDD_PRIMERDOCTOR), hwnd, primerDoctor);
 		}
+		hPcFotoDoctor = GetDlgItem(hwnd, BMP_MENU_DOCTOR);
+		hBmpDoctor = (HBITMAP)LoadImage(NULL, chDirFotoDoc, IMAGE_BITMAP, 100, 120, LR_LOADFROMFILE);
+		SendMessage(hPcFotoDoctor, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hBmpDoctor);
 		
 		HWND hLblListCount = GetDlgItem(hwnd, ST_LISTCOUNT);
 		int lista = SendMessage(hLbAgenda, LB_GETCOUNT, 0, 0);
@@ -353,6 +361,9 @@ BOOL CALLBACK nuevaCita(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 		HWND hLblCedulaNC = GetDlgItem(hwnd, ST_NC_CEDULA);
 		SetWindowText(hLblNombreMedicoNC, nombreMedico);
 		SetWindowText(hLblCedulaNC, cedula);
+		hPcFotoDoctor = GetDlgItem(hwnd, BMP_NC_DOCTOR);
+		hBmpDoctor = (HBITMAP)LoadImage(NULL, chDirFotoDoc, IMAGE_BITMAP, 75, 90, LR_LOADFROMFILE);
+		SendMessage(hPcFotoDoctor, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hBmpDoctor);
 
 		hLblReloj = GetDlgItem(hwnd, ST_NC_RELOJ);
 	}break;
@@ -712,16 +723,14 @@ BOOL CALLBACK editarInfoDoctor(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 
 		HWND hEdNombreMedico = GetDlgItem(hwnd, EDT_EDM_DOCTOR);
 		HWND hEdCedula = GetDlgItem(hwnd, EDT_EDM_CEDULA);
-		if (nombreMedico == "") {
-			SetWindowText(hEdNombreMedico, "");
-			SetWindowText(hEdCedula, "");
-		}
-		else {
-			SetWindowText(hEdNombreMedico, nombreMedico);
-			SetWindowText(hEdCedula, cedula);
-		}
+		SetWindowText(hEdNombreMedico, nombreMedico);
+		SetWindowText(hEdCedula, cedula);
+		hPcFotoDoctor = GetDlgItem(hwnd, BMP_EDM_DOCTOR);
+		hBmpDoctor = (HBITMAP)LoadImage(NULL, chDirFotoDoc, IMAGE_BITMAP, 100, 120, LR_LOADFROMFILE);
+		SendMessage(hPcFotoDoctor, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hBmpDoctor);
 	}break;
-	case WM_COMMAND:
+	case WM_COMMAND: {
+		
 		if (LOWORD(wParam) == BTN_SALIR && HIWORD(wParam) == BN_CLICKED) {
 			if (MessageBox(hwnd, "¿Seguro que quiere salir del programa?", "SALIR", MB_YESNO) == IDYES) {
 				salida = true;
@@ -748,6 +757,24 @@ BOOL CALLBACK editarInfoDoctor(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 			SetTimer(hAgenda, TM_RELOJ, 1000, NULL);
 			break;
 		}
+		if (LOWORD(wParam) == BTN_EDM_DOCTOR && HIWORD(wParam) == BN_CLICKED) {
+			OPENFILENAME ofnFotoDoctorCambio;
+			ZeroMemory(&ofnFotoDoctorCambio, sizeof(ofnFotoDoctorCambio));
+
+			ofnFotoDoctorCambio.hwndOwner = hwnd;
+			ofnFotoDoctorCambio.lStructSize = sizeof(ofnFotoDoctorCambio);
+			ofnFotoDoctorCambio.lpstrFile = chCambioFoto;
+			ofnFotoDoctorCambio.nMaxFile = MAX_PATH;
+			ofnFotoDoctorCambio.lpstrDefExt = "bmp";
+			ofnFotoDoctorCambio.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
+			ofnFotoDoctorCambio.lpstrFilter = "BMP Images\0*.bmp\0All Files\0*.*\0";
+			if (GetOpenFileName(&ofnFotoDoctorCambio)) {
+				hPcFotoDoctor = GetDlgItem(hwnd, BMP_EDM_DOCTOR);
+				hBmpDoctor = (HBITMAP)LoadImage(NULL, chCambioFoto, IMAGE_BITMAP, 100, 120, LR_LOADFROMFILE);
+				SendMessage(hPcFotoDoctor, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hBmpDoctor);
+			}
+			break;
+		}
 		if (LOWORD(wParam = ID_EDM_OK && HIWORD(wParam) == BN_CLICKED)) {
 			HWND hEdNombreMedico = GetDlgItem(hwnd, EDT_EDM_DOCTOR);
 			int length = GetWindowTextLength(hEdNombreMedico);
@@ -757,7 +784,7 @@ BOOL CALLBACK editarInfoDoctor(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 				if (verificarNum(m)) {
 					MessageBox(hwnd, "El nombre del médico no debe contener números.", "AVISO", MB_ICONEXCLAMATION);
 					break;
-				} 
+				}
 			}
 			else {
 				MessageBox(hwnd, "Llene el nombre del médico.", "AVISO", MB_ICONEXCLAMATION);
@@ -774,12 +801,14 @@ BOOL CALLBACK editarInfoDoctor(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 				break;
 			}
 
+			strcpy(chDirFotoDoc, chCambioFoto);
+
 			DestroyWindow(hEditarDoctor);
 			hAgenda = CreateDialog(hInstGlobal, MAKEINTRESOURCE(IDD_AGENDA), NULL, agendaVentanaPrincipal);
 			ShowWindow(hAgenda, SW_SHOW);
 			SetTimer(hAgenda, TM_RELOJ, 1000, NULL);
 		}
-		break;
+	}break;
 	case WM_DESTROY:
 		if (salida) {
 			PostQuitMessage(0);
@@ -801,6 +830,9 @@ BOOL CALLBACK pagarCita(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 		HWND hLblCedulaPC = GetDlgItem(hwnd, ST_PC_CEDULA);
 		SetWindowText(hLblNombreMedicoPC, nombreMedico);
 		SetWindowText(hLblCedulaPC, cedula);
+		hPcFotoDoctor = GetDlgItem(hwnd, BMP_PC_DOCTOR);
+		hBmpDoctor = (HBITMAP)LoadImage(NULL, chDirFotoDoc, IMAGE_BITMAP, 75, 90, LR_LOADFROMFILE);
+		SendMessage(hPcFotoDoctor, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hBmpDoctor);
 
 		char buffer[80];
 		HWND hStMascota = GetDlgItem(hwnd, ST_PC_MNOMBRE);
@@ -965,6 +997,9 @@ BOOL CALLBACK editarCita(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 		HWND hLblNombreMedicoNC = GetDlgItem(hwnd, ST_NC_DOCTOR);
 		HWND hLblCedulaNC = GetDlgItem(hwnd, ST_NC_CEDULA);
 		SetWindowText(hLblNombreMedicoNC, nombreMedico);
+		hPcFotoDoctor = GetDlgItem(hwnd, BMP_NC_DOCTOR);
+		hBmpDoctor = (HBITMAP)LoadImage(NULL, chDirFotoDoc, IMAGE_BITMAP, 75, 90, LR_LOADFROMFILE);
+		SendMessage(hPcFotoDoctor, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hBmpDoctor);
 		SetWindowText(hLblCedulaNC, cedula);
 
 		hLblReloj = GetDlgItem(hwnd, ST_NC_RELOJ);
@@ -1342,7 +1377,7 @@ BOOL CALLBACK primerDoctor(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 		MessageBox(hwnd, "Hola, doctor. Ingrese sus datos para empezar su agenda.", "BIENVENIDO", MB_ICONINFORMATION);
 		break;
 	case WM_COMMAND:
-		if (LOWORD(wParam = ID_PM_OK && HIWORD(wParam) == BN_CLICKED)) {
+		if (LOWORD(wParam) == IDOK && HIWORD(wParam) == BN_CLICKED) {
 			HWND hEdNombreMedico = GetDlgItem(hwnd, EDT_EDM_DOCTOR);
 			int length = GetWindowTextLength(hEdNombreMedico);
 			if (length > 0) {
@@ -1372,6 +1407,23 @@ BOOL CALLBACK primerDoctor(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 			SetWindowText(hLblCedula, cedula);
 
 			EndDialog(hwnd, 0);
+		}
+		if (LOWORD(wParam) == BTN_EDM_DOCTOR && HIWORD(wParam) == BN_CLICKED) {
+			OPENFILENAME ofnFotoDoctor;
+			ZeroMemory(&ofnFotoDoctor, sizeof(ofnFotoDoctor));
+
+			ofnFotoDoctor.hwndOwner = hwnd;
+			ofnFotoDoctor.lStructSize = sizeof(ofnFotoDoctor);
+			ofnFotoDoctor.lpstrFile = chDirFotoDoc;
+			ofnFotoDoctor.nMaxFile = MAX_PATH;
+			ofnFotoDoctor.lpstrDefExt = "bmp";
+			ofnFotoDoctor.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
+			ofnFotoDoctor.lpstrFilter = "BMP Images\0*.bmp\0All Files\0*.*\0";
+			if (GetOpenFileName(&ofnFotoDoctor)) {
+				hPcFotoDoctor = GetDlgItem(hwnd, BMP_EDM_DOCTOR);
+				hBmpDoctor = (HBITMAP)LoadImage(NULL, chDirFotoDoc, IMAGE_BITMAP, 100, 120, LR_LOADFROMFILE);
+				SendMessage(hPcFotoDoctor, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hBmpDoctor);
+			}
 		}
 		break;
 	}

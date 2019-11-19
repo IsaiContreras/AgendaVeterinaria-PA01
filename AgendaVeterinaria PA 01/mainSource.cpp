@@ -51,8 +51,7 @@ struct CITA {
 
 char nombreMedico[50] = {NULL};
 char cedula[20] = {NULL};
-
-bool exitApp = false;
+bool salida = false;
 #pragma endregion
 
 #pragma region PrototipoFunciones
@@ -125,9 +124,12 @@ BOOL CALLBACK agendaVentanaPrincipal(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
 	}break;
 	case WM_COMMAND: {
 		if (LOWORD(wParam) == BTN_SALIR && HIWORD(wParam) == BN_CLICKED) {
-			exitApp = true;
-			KillTimer(hwnd, TM_RELOJ);
-			DestroyWindow(hAgenda);
+			if (MessageBox(hwnd, "¿Seguro que quiere salir del programa?", "SALIR", MB_YESNO) == IDYES) {
+				salida = true;
+				KillTimer(hwnd, TM_RELOJ);
+				DestroyWindow(hAgenda);
+			}
+			break;
 		}
 		if (LOWORD(wParam) == BTN_EDITDOCINFO && HIWORD(wParam) == BN_CLICKED) {
 			KillTimer(hAgenda, TM_RELOJ);
@@ -201,13 +203,13 @@ BOOL CALLBACK agendaVentanaPrincipal(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
 					costo = costo + " a 3 meses sin intereses.";
 				}
 				else if (aux->formaPago == 6) {
-					costo = costo + " a 6 meses sin intereses.";
+					costo = "$" + costo + " a 6 meses sin intereses.";
 				}
 				else if (aux->formaPago == 9) {
-					costo = costo + " a 9 meses sin intereses.";
+					costo = "$" + costo + " a 9 meses sin intereses.";
 				}
 				else {
-					costo = costo + " de contado.";
+					costo = "$" + costo + " de contado.";
 				}
 				strcpy(buffer, costo.c_str());
 				SetWindowText(hStCosto, buffer);
@@ -301,12 +303,11 @@ BOOL CALLBACK agendaVentanaPrincipal(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
 		}break;
 	case WM_CLOSE:
 		break;
-	case WM_DESTROY: 
-		if (exitApp) {
-			
+	case WM_DESTROY:
+		if (salida) {
 			PostQuitMessage(0);
 		}
-	break;
+	    break;
 	}
 	return FALSE;
 }
@@ -352,19 +353,21 @@ BOOL CALLBACK nuevaCita(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 	}break;
 	case WM_COMMAND: {
 		if (LOWORD(wParam) == BTN_SALIR && HIWORD(wParam) == BN_CLICKED) {
-			if (aux->next == NULL && aux->prev == NULL) {
-				delete aux;
-				aux = origin = NULL;
-			}
-			else {
-				aux->prev->next = NULL;
-				delete aux;
-				aux = origin;
-			}
+			if (MessageBox(hwnd, "¿Seguro que quiere salir del programa?", "SALIR", MB_YESNO) == IDYES) {
+				if (aux->next == NULL && aux->prev == NULL) {
+					delete aux;
+					aux = origin = NULL;
+				}
+				else {
+					aux->prev->next = NULL;
+					delete aux;
+					aux = origin;
+				}
 
-			exitApp = true;
-			KillTimer(hwnd, TM_NC_RELOJ);
-			DestroyWindow(hNuevaCita);
+				salida = true;
+				KillTimer(hwnd, TM_NC_RELOJ);
+				DestroyWindow(hNuevaCita);
+			}
 		}
 		if (LOWORD(wParam) == BTN_AGENDA && HIWORD(wParam) == BN_CLICKED) {
 			if (aux->next == NULL && aux->prev == NULL) {
@@ -484,32 +487,6 @@ BOOL CALLBACK nuevaCita(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 			string min = h.substr(3, 2);
 			string amPm = h.substr(9, 1);
 			string stdHour;
-			//VALIDACIÓN DE FECHA NO REPETIDA
-			if (amPm == "p") {
-				stdHour = I + ":" + min + " P.M.";
-			}
-			else {
-				stdHour = I + ":" + min + " A.M.";
-			}
-			CITA *auxCF = origin;
-			bool fechaRepetida = false;
-			while (auxCF != NULL) {
-				if (f.compare(auxCF->fechaString) == 0) {
-					if (stdHour.compare(auxCF->horaString) == 0) {
-						fechaRepetida = true;
-						break;
-					}
-				}
-				auxCF = auxCF->next;
-			}
-			if (fechaRepetida) {
-				MessageBox(hwnd, "La fecha y hora de la cita ya no está disponible. Ya existe otra cita en este horario.", "AVISO", MB_ICONEXCLAMATION);
-				break;
-			}
-			else {
-				aux->fechaString = f;
-				aux->horaString = stdHour;
-			}
 			//VALIDCIÓN DE FECHA NO ANTIGUA
 			int yearComp = stoi(Y);
 			int monthComp = stoi(m);
@@ -619,6 +596,32 @@ BOOL CALLBACK nuevaCita(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 				MessageBox(hwnd, "Coloque fecha válida, el año debe ser actual o próximo.", "AVISO", MB_ICONEXCLAMATION);
 				break;
 			}
+			//VALIDACIÓN DE FECHA NO REPETIDA
+			if (amPm == "p") {
+				stdHour = I + ":" + min + " P.M.";
+			}
+			else {
+				stdHour = I + ":" + min + " A.M.";
+			}
+			CITA *auxCF = origin;
+			bool fechaRepetida = false;
+			while (auxCF != NULL) {
+				if (f.compare(auxCF->fechaString) == 0) {
+					if (stdHour.compare(auxCF->horaString) == 0) {
+						fechaRepetida = true;
+						break;
+					}
+				}
+				auxCF = auxCF->next;
+			}
+			if (fechaRepetida) {
+				MessageBox(hwnd, "La fecha y hora de la cita ya no está disponible. Ya existe otra cita en este horario.", "AVISO", MB_ICONEXCLAMATION);
+				break;
+			}
+			else {
+				aux->fechaString = f;
+				aux->horaString = stdHour;
+			}
 
 			HWND hEdMotivo = GetDlgItem(hwnd, EDT_NC_MOTIVO);
 			length = GetWindowTextLength(hEdMotivo);
@@ -685,7 +688,7 @@ BOOL CALLBACK nuevaCita(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 		SetWindowText(hLblReloj, reloj);
 	}break;
 	case WM_DESTROY:
-		if (exitApp) {
+		if (salida) {
 			PostQuitMessage(0);
 		}
 		break;
@@ -714,8 +717,11 @@ BOOL CALLBACK editarInfoDoctor(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 	}break;
 	case WM_COMMAND:
 		if (LOWORD(wParam) == BTN_SALIR && HIWORD(wParam) == BN_CLICKED) {
-			exitApp = true;
-			DestroyWindow(hEditarDoctor);
+			if (MessageBox(hwnd, "¿Seguro que quiere salir del programa?", "SALIR", MB_YESNO) == IDYES) {
+				salida = true;
+				DestroyWindow(hEditarDoctor);
+			}
+			break;
 		}
 		if (LOWORD(wParam) == BTN_AGENDA && HIWORD(wParam) == BN_CLICKED) {
 			DestroyWindow(hEditarDoctor);
@@ -769,8 +775,7 @@ BOOL CALLBACK editarInfoDoctor(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 		}
 		break;
 	case WM_DESTROY:
-		if (exitApp) {
-
+		if (salida) {
 			PostQuitMessage(0);
 		}
 		break;
@@ -786,10 +791,10 @@ BOOL CALLBACK pagarCita(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 		EnableMenuItem(hBarraMenu, BTN_NUEVACITA, MF_ENABLED);
 		EnableMenuItem(hBarraMenu, BTN_EDITDOCINFO, MF_ENABLED);
 
-		HWND hLblNombreMedicoNC = GetDlgItem(hwnd, ST_PC_DOCTOR);
-		HWND hLblCedulaNC = GetDlgItem(hwnd, ST_PC_COSTO);
-		SetWindowText(hLblNombreMedicoNC, nombreMedico);
-		SetWindowText(hLblCedulaNC, cedula);
+		HWND hLblNombreMedicoPC = GetDlgItem(hwnd, ST_PC_DOCTOR);
+		HWND hLblCedulaPC = GetDlgItem(hwnd, ST_PC_COSTO);
+		SetWindowText(hLblNombreMedicoPC, nombreMedico);
+		SetWindowText(hLblCedulaPC, cedula);
 
 		char buffer[80];
 		HWND hStMascota = GetDlgItem(hwnd, ST_PC_MNOMBRE);
@@ -866,30 +871,79 @@ BOOL CALLBACK pagarCita(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 			DestroyWindow(hPagarCita);
 			hAgenda = CreateDialog(hInstGlobal, MAKEINTRESOURCE(IDD_AGENDA), NULL, agendaVentanaPrincipal);
 			ShowWindow(hAgenda, SW_SHOW);
+			SetTimer(hAgenda, TM_RELOJ, 1000, NULL);
+		}
+		if (LOWORD(wParam) == IDOK && HIWORD(wParam) == BN_CLICKED) {
+			MessageBox(hwnd, "Se ha pagado la cita. Tenga un buen día.", "PAGADO", MB_OK);
+			hAgenda = CreateDialog(hInstGlobal, MAKEINTRESOURCE(IDD_AGENDA), NULL, agendaVentanaPrincipal);
+			DestroyWindow(hPagarCita);
+
+			SendMessage(hLbAgenda, LB_RESETCONTENT, 0, 0);
+			if (aux->next == NULL && aux->prev == NULL) {
+				delete aux;
+				aux = origin = NULL;
+			}
+			else if (aux->prev == NULL) {
+				origin = origin->next;
+				aux->next->prev = NULL;
+				delete aux;
+				aux = origin;
+			}
+			else if (aux->next == NULL) {
+				aux->prev->next = NULL;
+				delete aux;
+				aux = origin;
+			}
+			else {
+				aux->prev->next = aux->next;
+				aux->next->prev = aux->prev;
+				delete aux;
+				aux = origin;
+			}
+
+			ordenamiento();
+			impresion();
+
+			HWND hLblListCount = GetDlgItem(hwnd, ST_LISTCOUNT);
+			int lista = SendMessage(hLbAgenda, LB_GETCOUNT, 0, 0);
+			char listaC[20];
+			_itoa(lista, listaC, 10);
+			SetWindowText(hLblListCount, listaC);
+
+			ShowWindow(hAgenda, SW_SHOW);
+			SetTimer(hAgenda, TM_RELOJ, 1000, NULL);
 		}
 		if (LOWORD(wParam) == BTN_SALIR && HIWORD(wParam) == BN_CLICKED) {
-			aux = origin;
-			exitApp = true;
-			DestroyWindow(hEditarDoctor);
+			if (MessageBox(hwnd, "¿Seguro que quiere salir del programa?", "SALIR", MB_YESNO) == IDYES) {
+				aux = origin;
+				salida = true;
+				DestroyWindow(hPagarCita);
+			}
+			break;
 		}
 		if (LOWORD(wParam) == BTN_AGENDA && HIWORD(wParam) == BN_CLICKED) {
 			aux = origin;
-			DestroyWindow(hEditarDoctor);
+			DestroyWindow(hPagarCita);
 			hAgenda = CreateDialog(hInstGlobal, MAKEINTRESOURCE(IDD_AGENDA), NULL, agendaVentanaPrincipal);
 			ShowWindow(hAgenda, SW_SHOW);
 			SetTimer(hAgenda, TM_RELOJ, 1000, NULL);
 		}
 		if (LOWORD(wParam) == BTN_NUEVACITA && HIWORD(wParam) == BN_CLICKED) {
 			aux = origin;
-			DestroyWindow(hEditarDoctor);
+			DestroyWindow(hPagarCita);
 			hNuevaCita = CreateDialog(hInstGlobal, MAKEINTRESOURCE(IDD_NUEVACITA), NULL, nuevaCita);
 			ShowWindow(hNuevaCita, SW_SHOW);
 			SetTimer(hNuevaCita, TM_NC_RELOJ, 1000, NULL);
 		}
+		if (LOWORD(wParam) == BTN_EDITDOCINFO && HIWORD(wParam) == BN_CLICKED) {
+			aux = origin;
+			DestroyWindow(hPagarCita);
+			hEditarDoctor = CreateDialog(hInstGlobal, MAKEINTRESOURCE(IDD_EDITDOCTOR), NULL, editarInfoDoctor);
+			ShowWindow(hEditarDoctor, SW_SHOW);
+		}
 		break;
 	case WM_DESTROY:
-		if (exitApp) {
-
+		if (salida) {
 			PostQuitMessage(0);
 		}
 		break;
@@ -905,10 +959,16 @@ BOOL CALLBACK editarCita(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 			hAgenda = CreateDialog(hInstGlobal, MAKEINTRESOURCE(IDD_AGENDA), NULL, agendaVentanaPrincipal);
 			ShowWindow(hAgenda, SW_SHOW);
 		}
+		if (LOWORD(wParam) == BTN_SALIR && HIWORD(wParam) == BN_CLICKED) {
+			if (MessageBox(hwnd, "¿Seguro que quiere salir del programa?", "SALIR", MB_YESNO) == IDYES) {
+				salida = true;
+				DestroyWindow(hEditarCita);
+			}
+			break;
+		}
 		break;
 	case WM_DESTROY:
-		if (exitApp) {
-
+		if (salida) {
 			PostQuitMessage(0);
 		}
 		break;

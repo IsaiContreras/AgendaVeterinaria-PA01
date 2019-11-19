@@ -37,6 +37,7 @@
 #define ST_PC_DOCTOR                    1033
 #define ST_PC_CEDULA                    1034
 #define BMP_PC_MASCOTA                  1035
+#define BMP_PC_MASCOTA1                 1035
 #define EDT_PC_MOTIVO                   1036
 #define ST_PC_METPAGO                   1037
 #define ST_PC_MNOMBRE                   1038
@@ -74,6 +75,10 @@
 #define ST_INFO_MOTIVO                  1089
 #define BMP_MENU_MASCOTA1               1090
 #define BMP_MENU_MASCOTA2               1091
+#define BMP_PC_MASCOTA2                 1092
+#define ST_IVA                          1094
+#define ST_PRECIOTOT                    1095
+#define ST_PORMES                       1096
 #define BTN_EDITARCITA                  40036
 #define BTN_PAGARCITA                   40038
 #define BTN_ELIMINARCITA                40040
@@ -86,9 +91,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        124
+#define _APS_NEXT_RESOURCE_VALUE        126
 #define _APS_NEXT_COMMAND_VALUE         40050
-#define _APS_NEXT_CONTROL_VALUE         1092
+#define _APS_NEXT_CONTROL_VALUE         1097
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

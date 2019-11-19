@@ -1,2 +1,3 @@
 ﻿  mainSource.cpp
+d:\alexi\documents\visual proyectos\agendaveterinaria pa 01\agendaveterinaria pa 01\mainsource.cpp(839): warning C4244: 'inicializando': conversión de 'double' a 'float'; posible pérdida de datos
   AgendaVeterinaria PA 01.vcxproj -> D:\alexi\Documents\Visual Proyectos\AgendaVeterinaria PA 01\Debug\AgendaVeterinaria PA 01.exe

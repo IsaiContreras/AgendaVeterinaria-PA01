@@ -58,7 +58,6 @@ bool exitApp = false;
 #pragma region PrototipoFunciones
 bool verificarNum(string);
 bool verificarAlfa(string);
-int countList();
 void ordenamiento();
 void impresion();
 #pragma endregion
@@ -118,7 +117,7 @@ BOOL CALLBACK agendaVentanaPrincipal(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
 		}
 		
 		HWND hLblListCount = GetDlgItem(hwnd, ST_LISTCOUNT);
-		int lista = countList();
+		int lista = SendMessage(hLbAgenda, LB_GETCOUNT, 0, 0);
 		string n = to_string(lista);
 		char listaC[20];
 		strcpy(listaC, n.c_str());
@@ -129,6 +128,20 @@ BOOL CALLBACK agendaVentanaPrincipal(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
 			exitApp = true;
 			KillTimer(hwnd, TM_RELOJ);
 			DestroyWindow(hAgenda);
+		}
+		if (LOWORD(wParam) == BTN_EDITDOCINFO && HIWORD(wParam) == BN_CLICKED) {
+			KillTimer(hAgenda, TM_RELOJ);
+			DestroyWindow(hAgenda);
+			hEditarDoctor = CreateDialog(hInstGlobal, MAKEINTRESOURCE(IDD_EDITDOCTOR), NULL, editarInfoDoctor);
+			ShowWindow(hEditarDoctor, SW_SHOW);
+		}
+		if (LOWORD(wParam) == BTN_NUEVACITA && HIWORD(wParam) == BN_CLICKED) {
+			aux = origin;
+			KillTimer(hAgenda, TM_RELOJ);
+			DestroyWindow(hAgenda);
+			hNuevaCita = CreateDialog(hInstGlobal, MAKEINTRESOURCE(IDD_NUEVACITA), NULL, nuevaCita);
+			ShowWindow(hNuevaCita, SW_SHOW);
+			SetTimer(hNuevaCita, TM_NC_RELOJ, 1000, NULL);
 		}
 		if (LOWORD(wParam) == BTN_SELECT && HIWORD(wParam) == BN_CLICKED) {
 			int index = SendMessage(hLbAgenda, LB_GETCURSEL, 0, 0);
@@ -181,7 +194,21 @@ BOOL CALLBACK agendaVentanaPrincipal(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
 				SetWindowText(hStFechaHora, buffer);
 
 				HWND hStCosto = GetDlgItem(hwnd, ST_INFO_COSTO);
-				string costo = to_string(aux->costo);
+				char costoC[20];
+				snprintf(costoC, sizeof(costoC), "%.2f", aux->costo);
+				string costo(costoC);
+				if (aux->formaPago == 3) {
+					costo = costo + " a 3 meses sin intereses.";
+				}
+				else if (aux->formaPago == 6) {
+					costo = costo + " a 6 meses sin intereses.";
+				}
+				else if (aux->formaPago == 9) {
+					costo = costo + " a 9 meses sin intereses.";
+				}
+				else {
+					costo = costo + " de contado.";
+				}
 				strcpy(buffer, costo.c_str());
 				SetWindowText(hStCosto, buffer);
 
@@ -195,22 +222,7 @@ BOOL CALLBACK agendaVentanaPrincipal(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
 				EnableWindow(hBtnEdit, true);
 				EnableWindow(hBtnPagar, true);
 				EnableWindow(hBtnEliminar, true);
-
 			}
-		}
-		if (LOWORD(wParam) == BTN_EDITDOCINFO && HIWORD(wParam) == BN_CLICKED) {
-			KillTimer(hAgenda, TM_RELOJ);
-			DestroyWindow(hAgenda);
-			hEditarDoctor = CreateDialog(hInstGlobal, MAKEINTRESOURCE(IDD_EDITDOCTOR), NULL, editarInfoDoctor);
-			ShowWindow(hEditarDoctor, SW_SHOW);
-		}
-		if (LOWORD(wParam) == BTN_NUEVACITA && HIWORD(wParam) == BN_CLICKED) {
-			aux = origin;
-			KillTimer(hAgenda, TM_RELOJ);
-			DestroyWindow(hAgenda);
-			hNuevaCita = CreateDialog(hInstGlobal, MAKEINTRESOURCE(IDD_NUEVACITA), NULL, nuevaCita);
-			ShowWindow(hNuevaCita, SW_SHOW);
-			SetTimer(hNuevaCita, TM_NC_RELOJ, 1000, NULL);
 		}
 		if (LOWORD(wParam) == BTN_PAGARCITA && HIWORD(wParam) == BN_CLICKED) {
 			DestroyWindow(hAgenda);
@@ -222,8 +234,62 @@ BOOL CALLBACK agendaVentanaPrincipal(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
 			hEditarCita = CreateDialog(hInstGlobal, MAKEINTRESOURCE(IDD_EDITARCITA), NULL, editarCita);
 			ShowWindow(hEditarCita, SW_SHOW);
 		}
-		if (LOWORD(wParam) == BTN_ELIMINARCITA && HIWORD(wParam == BN_CLICKED)) {
+		if (LOWORD(wParam) == BTN_ELIMINARCITA && HIWORD(wParam) == BN_CLICKED) {
+			if (MessageBox(hwnd, "¿Seguro que desea eliminar esta cita?", "Eliminar Cita", MB_OKCANCEL) == IDOK) {
+				SendMessage(hLbAgenda, LB_RESETCONTENT, 0, 0);
+			    if (aux->next == NULL && aux->prev == NULL) {
+				delete aux;
+				aux = origin = NULL;
+			    }
+				else if (aux->prev == NULL) {
+					origin = origin->next;
+					aux->next->prev = NULL;
+					delete aux;
+					aux = origin;
+				}
+				else if (aux->next == NULL) {
+					aux->prev->next = NULL;
+					delete aux;
+					aux = origin;
+				}
+				else {
+					aux->prev->next = aux->next;
+					aux->next->prev = aux->prev;
+					delete aux;
+					aux = origin;
+				}
 
+				ordenamiento();
+				impresion();
+
+				HWND hLblListCount = GetDlgItem(hwnd, ST_LISTCOUNT);
+				int lista = SendMessage(hLbAgenda, LB_GETCOUNT, 0, 0);
+				char listaC[20];
+				_itoa(lista, listaC, 10);
+				SetWindowText(hLblListCount, listaC);
+
+				HWND hBtnEdit = GetDlgItem(hwnd, BTN_EDITARCITA);
+				HWND hBtnPagar = GetDlgItem(hwnd, BTN_PAGARCITA);
+				HWND hBtnEliminar = GetDlgItem(hwnd, BTN_ELIMINARCITA);
+				EnableWindow(hBtnEdit, false);
+				EnableWindow(hBtnPagar, false);
+				EnableWindow(hBtnEliminar, false);
+
+				HWND hStMascota = GetDlgItem(hwnd, ST_INFO_MASCOTA);
+				SetWindowText(hStMascota, "");
+				HWND hStEspecie = GetDlgItem(hwnd, ST_INFO_ESPECIE);
+				SetWindowText(hStEspecie, "");
+				HWND hStDueno = GetDlgItem(hwnd, ST_INFO_DUENO);
+				SetWindowText(hStDueno, "");
+				HWND hStTelefono = GetDlgItem(hwnd, ST_INFO_TELEFONO);
+				SetWindowText(hStTelefono, "");
+				HWND hStFechaHora = GetDlgItem(hwnd, ST_INFO_FECHA);
+				SetWindowText(hStFechaHora, "");
+				HWND hStCosto = GetDlgItem(hwnd, ST_INFO_COSTO);
+				SetWindowText(hStCosto, "");
+				HWND hStMotivo = GetDlgItem(hwnd, ST_INFO_MOTIVO);
+				SetWindowText(hStMotivo, "");
+			}
 		}
 	}break;
 	case WM_TIMER: {
@@ -440,8 +506,10 @@ BOOL CALLBACK nuevaCita(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 				MessageBox(hwnd, "La fecha y hora de la cita ya no está disponible. Ya existe otra cita en este horario.", "AVISO", MB_ICONEXCLAMATION);
 				break;
 			}
-			aux->fechaString = f;
-			aux->horaString = stdHour;
+			else {
+				aux->fechaString = f;
+				aux->horaString = stdHour;
+			}
 			//VALIDCIÓN DE FECHA NO ANTIGUA
 			int yearComp = stoi(Y);
 			int monthComp = stoi(m);
@@ -712,11 +780,111 @@ BOOL CALLBACK editarInfoDoctor(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 
 BOOL CALLBACK pagarCita(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 	switch (msg) {
+	case WM_INITDIALOG: {
+		hBarraMenu = GetMenu(hwnd);
+		EnableMenuItem(hBarraMenu, BTN_AGENDA, MF_ENABLED);
+		EnableMenuItem(hBarraMenu, BTN_NUEVACITA, MF_ENABLED);
+		EnableMenuItem(hBarraMenu, BTN_EDITDOCINFO, MF_ENABLED);
+
+		HWND hLblNombreMedicoNC = GetDlgItem(hwnd, ST_PC_DOCTOR);
+		HWND hLblCedulaNC = GetDlgItem(hwnd, ST_PC_COSTO);
+		SetWindowText(hLblNombreMedicoNC, nombreMedico);
+		SetWindowText(hLblCedulaNC, cedula);
+
+		char buffer[80];
+		HWND hStMascota = GetDlgItem(hwnd, ST_PC_MNOMBRE);
+		strcpy(buffer, aux->nombreMascota.c_str());
+		SetWindowText(hStMascota, buffer);
+
+		HWND hStEspecie = GetDlgItem(hwnd, ST_PC_ESPECIE);
+		strcpy(buffer, aux->especie.c_str());
+		SetWindowText(hStEspecie, buffer);
+
+		HWND hStDueno = GetDlgItem(hwnd, ST_PC_DNOMBRE);
+		strcpy(buffer, aux->nombreDueño.c_str());
+		SetWindowText(hStDueno, buffer);
+
+		HWND hStTelefono = GetDlgItem(hwnd, ST_PC_TELEFONO);
+		strcpy(buffer, aux->telefono.c_str());
+		SetWindowText(hStTelefono, buffer);
+
+		HWND hStFechaHora = GetDlgItem(hwnd, ST_PC_FECHAHORA);
+		string infoFechaHora = aux->fechaString + " a las " + aux->horaString;
+		strcpy(buffer, infoFechaHora.c_str());
+		SetWindowText(hStFechaHora, buffer);
+
+		HWND hStMotivo = GetDlgItem(hwnd, EDT_PC_MOTIVO);
+		strcpy(buffer, aux->motivoConsulta.c_str());
+		SetWindowText(hStMotivo, buffer);
+
+		HWND hStCosto = GetDlgItem(hwnd, ST_PC_COSTO);
+		char costoC[20];
+		snprintf(costoC, sizeof(costoC), "%.2f", aux->costo);
+		string costo(costoC);
+		if (aux->formaPago == 3) {
+			costo = costo + " a 3 meses sin intereses.";
+		}
+		else if (aux->formaPago == 6) {
+			costo = costo + " a 6 meses sin intereses.";
+		}
+		else if (aux->formaPago == 9) {
+			costo = costo + " a 9 meses sin intereses.";
+		}
+		else {
+			costo = costo + " de contado.";
+		}
+		strcpy(buffer, costo.c_str());
+		SetWindowText(hStCosto, buffer);
+
+		float iva = aux->costo * .12;
+		float precioTot = aux->costo + iva;
+		float precioMeses = precioTot / aux->formaPago;
+
+		HWND hStIva = GetDlgItem(hwnd, ST_IVA);
+		char ivaC[20];
+		snprintf(ivaC, sizeof(ivaC), "%.2f", iva);
+		SetWindowText(hStIva, ivaC);
+
+		HWND hStPrecioTot = GetDlgItem(hwnd, ST_PRECIOTOT);
+		char precioTotC[20];
+		snprintf(precioTotC, sizeof(precioTotC), "%.2f", precioTot);
+		SetWindowText(hStPrecioTot, precioTotC);
+
+		HWND hStPrecioMes = GetDlgItem(hwnd, ST_PORMES);
+		if (aux->formaPago != 1) {
+			char precioMesC[20];
+			snprintf(precioMesC, sizeof(precioMesC), "%.2f", precioMeses);
+			SetWindowText(hStPrecioMes, precioMesC);
+		}
+		else {
+			SetWindowText(hStPrecioMes, precioTotC);
+		}
+	}break;
 	case WM_COMMAND:
 		if (LOWORD(wParam) == ID_PC_CANCELA && HIWORD(wParam) == BN_CLICKED) {
+			aux = origin;
 			DestroyWindow(hPagarCita);
 			hAgenda = CreateDialog(hInstGlobal, MAKEINTRESOURCE(IDD_AGENDA), NULL, agendaVentanaPrincipal);
 			ShowWindow(hAgenda, SW_SHOW);
+		}
+		if (LOWORD(wParam) == BTN_SALIR && HIWORD(wParam) == BN_CLICKED) {
+			aux = origin;
+			exitApp = true;
+			DestroyWindow(hEditarDoctor);
+		}
+		if (LOWORD(wParam) == BTN_AGENDA && HIWORD(wParam) == BN_CLICKED) {
+			aux = origin;
+			DestroyWindow(hEditarDoctor);
+			hAgenda = CreateDialog(hInstGlobal, MAKEINTRESOURCE(IDD_AGENDA), NULL, agendaVentanaPrincipal);
+			ShowWindow(hAgenda, SW_SHOW);
+			SetTimer(hAgenda, TM_RELOJ, 1000, NULL);
+		}
+		if (LOWORD(wParam) == BTN_NUEVACITA && HIWORD(wParam) == BN_CLICKED) {
+			aux = origin;
+			DestroyWindow(hEditarDoctor);
+			hNuevaCita = CreateDialog(hInstGlobal, MAKEINTRESOURCE(IDD_NUEVACITA), NULL, nuevaCita);
+			ShowWindow(hNuevaCita, SW_SHOW);
+			SetTimer(hNuevaCita, TM_NC_RELOJ, 1000, NULL);
 		}
 		break;
 	case WM_DESTROY:
@@ -822,16 +990,6 @@ bool verificarAlfa(string c) {
 		}
 	}
 	return r;
-}
-
-int countList() {
-	int counter = 0;
-	while (aux != NULL) {
-		aux = aux->next;
-		counter++;
-	}
-	aux = origin;
-	return counter;
 }
 
 void ordenamiento() {

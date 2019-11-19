@@ -6,8 +6,8 @@
 #define IDD_EDITDOCTOR                  103
 #define IDD_NUEVACITA                   105
 #define IDD_PAGOCITA                    107
-#define IDD_EDITARCITA                  108
 #define IDD_PRIMERDOCTOR                109
+#define IDD_EDITARCITA                  110
 #define IDR_MENU1                       123
 #define BMP_MENU_DOCTOR                 1002
 #define ST_MENU_DOCTOR                  1003
@@ -19,9 +19,6 @@
 #define BMP_EDM_DOCTOR                  1014
 #define EDT_NC_DNOMBRE                  1015
 #define EDT_NC_TELEFONO                 1016
-#define BTN_NC_EXAMINAR                 1017
-#define BTN_NC_MNOMBRE                  1018
-#define BTN_NC_ESPECIE                  1020
 #define IDC_DATETIMEPICKER1             1021
 #define IDC_DATETIMEPICKER2             1022
 #define EDT_NC_MOTIVO                   1023
@@ -30,7 +27,6 @@
 #define RD_NC_6MESES                    1026
 #define RD_NC_9MESES                    1027
 #define BMP_NC_DOCTOR                   1028
-#define BMP_NC_MASCOTA                  1029
 #define ST_NC_DOCTOR                    1030
 #define ST_NC_CEDULA                    1031
 #define BMP_PC_DOCTOR                   1032
@@ -52,7 +48,6 @@
 #define ID_EN_OK                        1048
 #define RD_NC_CONTADO                   1050
 #define BTN_EC_APLICAR                  1051
-#define ID_EC_CANCELA                   1052
 #define BTN_NC_VERIFICAR                1053
 #define BMP_NC_MASCOTA1                 1054
 #define BMP_NC_MASCOTA2                 1055
@@ -79,6 +74,8 @@
 #define ST_IVA                          1094
 #define ST_PRECIOTOT                    1095
 #define ST_PORMES                       1096
+#define BTN_EC_CANCELA                  1097
+#define ST_NC_FECHAACTUAL               1098
 #define BTN_EDITARCITA                  40036
 #define BTN_PAGARCITA                   40038
 #define BTN_ELIMINARCITA                40040
@@ -93,7 +90,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        126
 #define _APS_NEXT_COMMAND_VALUE         40050
-#define _APS_NEXT_CONTROL_VALUE         1097
+#define _APS_NEXT_CONTROL_VALUE         1099
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

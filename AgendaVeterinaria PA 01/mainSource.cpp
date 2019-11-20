@@ -31,6 +31,7 @@ HWND hPcFotoMascota;
 
 HBITMAP hBmpDoctor;
 HBITMAP hBmpMascota;
+string tempImg[2];
 
 time_t allTime;
 struct tm *tiempoActual;
@@ -488,6 +489,23 @@ BOOL CALLBACK nuevaCita(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 			string foto(chCambioFoto);
 			aux->image[indexImage] = foto;
 			break;
+		}
+		if (LOWORD(wParam) == BTN_NC_CANCEL && HIWORD(wParam) == BN_CLICKED) {
+			if (aux->next == NULL && aux->prev == NULL) {
+				delete aux;
+				aux = origin = NULL;
+			}
+			else {
+				aux->prev->next = NULL;
+				delete aux;
+				aux = origin;
+			}
+
+			KillTimer(hNuevaCita, TM_NC_RELOJ);
+			DestroyWindow(hNuevaCita);
+			hAgenda = CreateDialog(hInstGlobal, MAKEINTRESOURCE(IDD_AGENDA), NULL, agendaVentanaPrincipal);
+			ShowWindow(hAgenda, SW_SHOW);
+			SetTimer(hAgenda, TM_RELOJ, 1000, NULL);
 		}
 		if (LOWORD(wParam) == IDOK && HIWORD(wParam) == BN_CLICKED) {
 			char buff[256];
@@ -1078,6 +1096,14 @@ BOOL CALLBACK editarCita(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
 		hLblReloj = GetDlgItem(hwnd, ST_NC_RELOJ);
 
+		strcpy(chCambioFoto, aux->image[0].c_str());
+		hPcFotoMascota = GetDlgItem(hwnd, BMP_NC_MASCOTA);
+		hBmpMascota = (HBITMAP)LoadImage(NULL, chCambioFoto, IMAGE_BITMAP, 100, 120, LR_LOADFROMFILE);
+		SendMessage(hPcFotoMascota, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hBmpMascota);
+		indexImage = 0;
+		tempImg[0] = aux->image[0];
+		tempImg[1] = aux->image[1];
+
 		char buffer[80];
 		HWND hEdNombreD = GetDlgItem(hwnd, EDT_NC_DNOMBRE);
 		strcpy(buffer, aux->nombreDueño.c_str());
@@ -1124,13 +1150,63 @@ BOOL CALLBACK editarCita(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 		}
 	}break;
 	case WM_COMMAND:
-		if (LOWORD(wParam) == BTN_EC_CANCELA && HIWORD(wParam) == BN_CLICKED) {
+		if (LOWORD(wParam) == BTN_NC_CANCEL && HIWORD(wParam) == BN_CLICKED) {
+			aux->image[0] = tempImg[0];
+			aux->image[1] = tempImg[1];
+
 			aux = origin;
 			KillTimer(hwnd, TM_EDC_RELOJ);
 			DestroyWindow(hEditarCita);
 			hAgenda = CreateDialog(hInstGlobal, MAKEINTRESOURCE(IDD_AGENDA), NULL, agendaVentanaPrincipal);
 			ShowWindow(hAgenda, SW_SHOW);
 			SetTimer(hAgenda, TM_RELOJ, 1000, NULL);
+		}
+		if (LOWORD(wParam) == BTN_NC_NEXT && HIWORD(wParam) == BN_CLICKED) {
+			indexImage = 1;
+			HWND hBtnIndexImage = GetDlgItem(hwnd, BTN_NC_NEXT);
+			EnableWindow(hBtnIndexImage, false);
+			hBtnIndexImage = GetDlgItem(hwnd, BTN_NC_PREV);
+			EnableWindow(hBtnIndexImage, true);
+
+			strcpy(chCambioFoto, aux->image[1].c_str());
+			hPcFotoMascota = GetDlgItem(hwnd, BMP_NC_MASCOTA);
+			hBmpMascota = (HBITMAP)LoadImage(NULL, chCambioFoto, IMAGE_BITMAP, 95, 114, LR_LOADFROMFILE);
+			SendMessage(hPcFotoMascota, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hBmpMascota);
+			break;
+		}
+		if (LOWORD(wParam) == BTN_NC_PREV && HIWORD(wParam) == BN_CLICKED) {
+			indexImage = 0;
+			HWND hBtnIndexImage = GetDlgItem(hwnd, BTN_NC_PREV);
+			EnableWindow(hBtnIndexImage, false);
+			hBtnIndexImage = GetDlgItem(hwnd, BTN_NC_NEXT);
+			EnableWindow(hBtnIndexImage, true);
+
+			strcpy(chCambioFoto, aux->image[0].c_str());
+			hPcFotoMascota = GetDlgItem(hwnd, BMP_NC_MASCOTA);
+			hBmpMascota = (HBITMAP)LoadImage(NULL, chCambioFoto, IMAGE_BITMAP, 95, 114, LR_LOADFROMFILE);
+			SendMessage(hPcFotoMascota, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hBmpMascota);
+			break;
+		}
+		if (LOWORD(wParam) == BTN_NC_FOTOMASCOTA && HIWORD(wParam) == BN_CLICKED) {
+			OPENFILENAME ofnFotoMascota;
+			ZeroMemory(&ofnFotoMascota, sizeof(ofnFotoMascota));
+
+			ofnFotoMascota.hwndOwner = hwnd;
+			ofnFotoMascota.lStructSize = sizeof(ofnFotoMascota);
+			ofnFotoMascota.lpstrFile = chCambioFoto;
+			ofnFotoMascota.nMaxFile = MAX_PATH;
+			ofnFotoMascota.lpstrDefExt = "bmp";
+			ofnFotoMascota.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
+			ofnFotoMascota.lpstrFilter = "BMP Images\0*.bmp\0All Files\0*.*\0";
+			if (GetOpenFileName(&ofnFotoMascota)) {
+				hPcFotoMascota = GetDlgItem(hwnd, BMP_NC_MASCOTA);
+				hBmpMascota = (HBITMAP)LoadImage(NULL, chCambioFoto, IMAGE_BITMAP, 95, 114, LR_LOADFROMFILE);
+				SendMessage(hPcFotoMascota, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hBmpMascota);
+			}
+
+			string foto(chCambioFoto);
+			aux->image[indexImage] = foto;
+			break;
 		}
 		if (LOWORD(wParam) == IDOK && HIWORD(wParam) == BN_CLICKED) {
 			char buff[256];

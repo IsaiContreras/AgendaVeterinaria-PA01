@@ -79,7 +79,9 @@
 #define BTN_NC_CANCEL                   1104
 #define BTN_NC_BORRARFOTO               1105
 #define BTN_EDM_BORRARFOTO              1107
-#define IDC_BUTTON1                     1108
+#define BTN_FILTER                      1109
+#define IDC_BUTTON2                     1110
+#define BTN_BORRARLISTA                 1110
 #define BTN_EDITARCITA                  40036
 #define BTN_PAGARCITA                   40038
 #define BTN_ELIMINARCITA                40040
@@ -94,7 +96,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        126
 #define _APS_NEXT_COMMAND_VALUE         40050
-#define _APS_NEXT_CONTROL_VALUE         1109
+#define _APS_NEXT_CONTROL_VALUE         1111
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

@@ -26,9 +26,11 @@ HWND hLbAgenda;
 HWND hLblReloj;
 HWND hLblNombreMedico;
 HWND hLblCedula;
-
 HWND hPcFotoDoctor;
+HWND hPcFotoMascota;
+
 HBITMAP hBmpDoctor;
+HBITMAP hBmpMascota;
 
 time_t allTime;
 struct tm *tiempoActual;
@@ -59,6 +61,7 @@ char cedula[20] = {NULL};
 char chDirFotoDoc[MAX_PATH] = "";
 char chCambioFoto[MAX_PATH] = "";
 bool salida = false;
+int indexImage;
 #pragma endregion
 
 #pragma region PrototipoFunciones
@@ -186,6 +189,16 @@ BOOL CALLBACK agendaVentanaPrincipal(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
 					aux = aux->next;
 				}
 
+				strcpy(chCambioFoto, aux->image[0].c_str());
+				hPcFotoMascota = GetDlgItem(hwnd, BMP_MENU_MASCOTA1);
+				hBmpMascota = (HBITMAP)LoadImage(NULL, chCambioFoto, IMAGE_BITMAP, 90, 108, LR_LOADFROMFILE);
+				SendMessage(hPcFotoMascota, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hBmpMascota);
+
+				strcpy(chCambioFoto, aux->image[1].c_str());
+				hPcFotoMascota = GetDlgItem(hwnd, BMP_MENU_MASCOTA2);
+				hBmpMascota = (HBITMAP)LoadImage(NULL, chCambioFoto, IMAGE_BITMAP, 90, 108, LR_LOADFROMFILE);
+				SendMessage(hPcFotoMascota, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hBmpMascota);
+
 				HWND hStMascota = GetDlgItem(hwnd, ST_INFO_MASCOTA);
 				strcpy(buffer, aux->nombreMascota.c_str());
 				SetWindowText(hStMascota, buffer);
@@ -304,6 +317,13 @@ BOOL CALLBACK agendaVentanaPrincipal(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
 				SetWindowText(hStCosto, "");
 				HWND hStMotivo = GetDlgItem(hwnd, ST_INFO_MOTIVO);
 				SetWindowText(hStMotivo, "");
+				strcpy(chCambioFoto, "");
+				hPcFotoMascota = GetDlgItem(hwnd, BMP_MENU_MASCOTA1);
+				hBmpMascota = (HBITMAP)LoadImage(NULL, chCambioFoto, IMAGE_BITMAP, 90, 108, LR_LOADFROMFILE);
+				SendMessage(hPcFotoMascota, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hBmpMascota);
+				hPcFotoMascota = GetDlgItem(hwnd, BMP_MENU_MASCOTA2);
+				hBmpMascota = (HBITMAP)LoadImage(NULL, chCambioFoto, IMAGE_BITMAP, 90, 108, LR_LOADFROMFILE);
+				SendMessage(hPcFotoMascota, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hBmpMascota);
 			}
 		}
 	}break;
@@ -352,10 +372,13 @@ BOOL CALLBACK nuevaCita(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 		HWND hCbEspecie = GetDlgItem(hwnd, CB_NC_ESPECIE);
 		SendMessage(hCbEspecie, CB_ADDSTRING, 0, (LPARAM)"Perro");
 		SendMessage(hCbEspecie, CB_ADDSTRING, 0, (LPARAM)"Gato");
+		SendMessage(hCbEspecie, CB_ADDSTRING, 0, (LPARAM)"Conejo");
+		SendMessage(hCbEspecie, CB_ADDSTRING, 0, (LPARAM)"Hámster");
+		SendMessage(hCbEspecie, CB_ADDSTRING, 0, (LPARAM)"Pájaro");
 		SendMessage(hCbEspecie, CB_ADDSTRING, 0, (LPARAM)"Loro");
-		SendMessage(hCbEspecie, CB_ADDSTRING, 0, (LPARAM)"Tortuga");
 		SendMessage(hCbEspecie, CB_ADDSTRING, 0, (LPARAM)"Pez");
-		SendMessage(hCbEspecie, CB_ADDSTRING, 0, (LPARAM)"Lagarto");
+		SendMessage(hCbEspecie, CB_ADDSTRING, 0, (LPARAM)"Tortuga");
+		SendMessage(hCbEspecie, CB_ADDSTRING, 0, (LPARAM)"Reptil o anfibio");
 
 		HWND hLblNombreMedicoNC = GetDlgItem(hwnd, ST_NC_DOCTOR);
 		HWND hLblCedulaNC = GetDlgItem(hwnd, ST_NC_CEDULA);
@@ -366,6 +389,7 @@ BOOL CALLBACK nuevaCita(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 		SendMessage(hPcFotoDoctor, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hBmpDoctor);
 
 		hLblReloj = GetDlgItem(hwnd, ST_NC_RELOJ);
+		indexImage = 0;
 	}break;
 	case WM_COMMAND: {
 		if (LOWORD(wParam) == BTN_SALIR && HIWORD(wParam) == BN_CLICKED) {
@@ -417,6 +441,53 @@ BOOL CALLBACK nuevaCita(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 			DestroyWindow(hNuevaCita);
 			hEditarDoctor = CreateDialog(hInstGlobal, MAKEINTRESOURCE(IDD_EDITDOCTOR), NULL, editarInfoDoctor);
 			ShowWindow(hEditarDoctor, SW_SHOW);
+		}
+		if (LOWORD(wParam) == BTN_NC_NEXT && HIWORD(wParam) == BN_CLICKED) {
+			indexImage = 1;
+			HWND hBtnIndexImage = GetDlgItem(hwnd, BTN_NC_NEXT);
+			EnableWindow(hBtnIndexImage, false);
+			hBtnIndexImage = GetDlgItem(hwnd, BTN_NC_PREV);
+			EnableWindow(hBtnIndexImage, true);
+
+			strcpy(chCambioFoto, aux->image[1].c_str());
+			hPcFotoMascota = GetDlgItem(hwnd, BMP_NC_MASCOTA);
+			hBmpMascota = (HBITMAP)LoadImage(NULL, chCambioFoto, IMAGE_BITMAP, 95, 114, LR_LOADFROMFILE);
+			SendMessage(hPcFotoMascota, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hBmpMascota);
+			break;
+		}
+		if (LOWORD(wParam) == BTN_NC_PREV && HIWORD(wParam) == BN_CLICKED) {
+			indexImage = 0;
+			HWND hBtnIndexImage = GetDlgItem(hwnd, BTN_NC_PREV);
+			EnableWindow(hBtnIndexImage, false);
+			hBtnIndexImage = GetDlgItem(hwnd, BTN_NC_NEXT);
+			EnableWindow(hBtnIndexImage, true);
+
+			strcpy(chCambioFoto, aux->image[0].c_str());
+			hPcFotoMascota = GetDlgItem(hwnd, BMP_NC_MASCOTA);
+			hBmpMascota = (HBITMAP)LoadImage(NULL, chCambioFoto, IMAGE_BITMAP, 95, 114, LR_LOADFROMFILE);
+			SendMessage(hPcFotoMascota, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hBmpMascota);
+			break;
+		}
+		if (LOWORD(wParam) == BTN_NC_FOTOMASCOTA && HIWORD(wParam) == BN_CLICKED) {
+			OPENFILENAME ofnFotoMascota;
+			ZeroMemory(&ofnFotoMascota, sizeof(ofnFotoMascota));
+
+			ofnFotoMascota.hwndOwner = hwnd;
+			ofnFotoMascota.lStructSize = sizeof(ofnFotoMascota);
+			ofnFotoMascota.lpstrFile = chCambioFoto;
+			ofnFotoMascota.nMaxFile = MAX_PATH;
+			ofnFotoMascota.lpstrDefExt = "bmp";
+			ofnFotoMascota.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
+			ofnFotoMascota.lpstrFilter = "BMP Images\0*.bmp\0All Files\0*.*\0";
+			if (GetOpenFileName(&ofnFotoMascota)) {
+				hPcFotoMascota = GetDlgItem(hwnd, BMP_NC_MASCOTA);
+				hBmpMascota = (HBITMAP)LoadImage(NULL, chCambioFoto, IMAGE_BITMAP, 95, 114, LR_LOADFROMFILE);
+				SendMessage(hPcFotoMascota, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hBmpMascota);
+			}
+
+			string foto(chCambioFoto);
+			aux->image[indexImage] = foto;
+			break;
 		}
 		if (LOWORD(wParam) == IDOK && HIWORD(wParam) == BN_CLICKED) {
 			char buff[256];
@@ -989,10 +1060,13 @@ BOOL CALLBACK editarCita(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 		HWND hCbEspecie = GetDlgItem(hwnd, CB_NC_ESPECIE);
 		SendMessage(hCbEspecie, CB_ADDSTRING, 0, (LPARAM)"Perro");
 		SendMessage(hCbEspecie, CB_ADDSTRING, 0, (LPARAM)"Gato");
+		SendMessage(hCbEspecie, CB_ADDSTRING, 0, (LPARAM)"Conejo");
+		SendMessage(hCbEspecie, CB_ADDSTRING, 0, (LPARAM)"Hámster");
+		SendMessage(hCbEspecie, CB_ADDSTRING, 0, (LPARAM)"Pájaro");
 		SendMessage(hCbEspecie, CB_ADDSTRING, 0, (LPARAM)"Loro");
-		SendMessage(hCbEspecie, CB_ADDSTRING, 0, (LPARAM)"Tortuga");
 		SendMessage(hCbEspecie, CB_ADDSTRING, 0, (LPARAM)"Pez");
-		SendMessage(hCbEspecie, CB_ADDSTRING, 0, (LPARAM)"Lagarto");
+		SendMessage(hCbEspecie, CB_ADDSTRING, 0, (LPARAM)"Tortuga");
+		SendMessage(hCbEspecie, CB_ADDSTRING, 0, (LPARAM)"Reptil o anfibio");
 
 		HWND hLblNombreMedicoNC = GetDlgItem(hwnd, ST_NC_DOCTOR);
 		HWND hLblCedulaNC = GetDlgItem(hwnd, ST_NC_CEDULA);
@@ -1476,6 +1550,8 @@ void ordenamiento() {
 				string tTel = auxProx->telefono;
 				string tEsp = auxProx->especie;
 				string tMotivo = auxProx->motivoConsulta;
+				string tImg0 = auxProx->image[0];
+				string tImg1 = auxProx->image[1];
 				string tFechaStr = auxProx->fechaString;
 				string tHoraStr = auxProx->horaString;
 				int tY = auxProx->year;
@@ -1492,6 +1568,8 @@ void ordenamiento() {
 				auxProx->telefono = auxActual->telefono;
 				auxProx->especie = auxActual->especie;
 				auxProx->motivoConsulta = auxActual->motivoConsulta;
+				auxProx->image[0] = auxActual->image[0];
+				auxProx->image[1] = auxActual->image[1];
 				auxProx->fechaString = auxActual->fechaString;
 				auxProx->horaString = auxActual->horaString;
 				auxProx->year = auxActual->year;
@@ -1508,6 +1586,8 @@ void ordenamiento() {
 				auxActual->telefono = tTel;
 				auxActual->especie = tEsp;
 				auxActual->motivoConsulta = tMotivo;
+				auxActual->image[0] = tImg0;
+				auxActual->image[1] = tImg1;
 				auxActual->fechaString = tFechaStr;
 				auxActual->horaString = tHoraStr;
 				auxActual->year = tY;
@@ -1525,6 +1605,8 @@ void ordenamiento() {
 				string tTel = auxProx->telefono;
 				string tEsp = auxProx->especie;
 				string tMotivo = auxProx->motivoConsulta;
+				string tImg0 = auxProx->image[0];
+				string tImg1 = auxProx->image[1];
 				string tFechaStr = auxProx->fechaString;
 				string tHoraStr = auxProx->horaString;
 				int tY = auxProx->year;
@@ -1541,6 +1623,8 @@ void ordenamiento() {
 				auxProx->telefono = auxActual->telefono;
 				auxProx->especie = auxActual->especie;
 				auxProx->motivoConsulta = auxActual->motivoConsulta;
+				auxProx->image[0] = auxActual->image[0];
+				auxProx->image[1] = auxActual->image[1];
 				auxProx->fechaString = auxActual->fechaString;
 				auxProx->horaString = auxActual->horaString;
 				auxProx->year = auxActual->year;
@@ -1557,6 +1641,8 @@ void ordenamiento() {
 				auxActual->telefono = tTel;
 				auxActual->especie = tEsp;
 				auxActual->motivoConsulta = tMotivo;
+				auxActual->image[0] = tImg0;
+				auxActual->image[1] = tImg1;
 				auxActual->fechaString = tFechaStr;
 				auxActual->horaString = tHoraStr;
 				auxActual->year = tY;
@@ -1574,6 +1660,8 @@ void ordenamiento() {
 				string tTel = auxProx->telefono;
 				string tEsp = auxProx->especie;
 				string tMotivo = auxProx->motivoConsulta;
+				string tImg0 = auxProx->image[0];
+				string tImg1 = auxProx->image[1];
 				string tFechaStr = auxProx->fechaString;
 				string tHoraStr = auxProx->horaString;
 				int tY = auxProx->year;
@@ -1590,6 +1678,8 @@ void ordenamiento() {
 				auxProx->telefono = auxActual->telefono;
 				auxProx->especie = auxActual->especie;
 				auxProx->motivoConsulta = auxActual->motivoConsulta;
+				auxProx->image[0] = auxActual->image[0];
+				auxProx->image[1] = auxActual->image[1];
 				auxProx->fechaString = auxActual->fechaString;
 				auxProx->horaString = auxActual->horaString;
 				auxProx->year = auxActual->year;
@@ -1606,6 +1696,8 @@ void ordenamiento() {
 				auxActual->telefono = tTel;
 				auxActual->especie = tEsp;
 				auxActual->motivoConsulta = tMotivo;
+				auxActual->image[0] = tImg0;
+				auxActual->image[1] = tImg1;
 				auxActual->fechaString = tFechaStr;
 				auxActual->horaString = tHoraStr;
 				auxActual->year = tY;
@@ -1623,6 +1715,8 @@ void ordenamiento() {
 				string tTel = auxProx->telefono;
 				string tEsp = auxProx->especie;
 				string tMotivo = auxProx->motivoConsulta;
+				string tImg0 = auxProx->image[0];
+				string tImg1 = auxProx->image[1];
 				string tFechaStr = auxProx->fechaString;
 				string tHoraStr = auxProx->horaString;
 				int tY = auxProx->year;
@@ -1639,6 +1733,8 @@ void ordenamiento() {
 				auxProx->telefono = auxActual->telefono;
 				auxProx->especie = auxActual->especie;
 				auxProx->motivoConsulta = auxActual->motivoConsulta;
+				auxProx->image[0] = auxActual->image[0];
+				auxProx->image[1] = auxActual->image[1];
 				auxProx->fechaString = auxActual->fechaString;
 				auxProx->horaString = auxActual->horaString;
 				auxProx->year = auxActual->year;
@@ -1655,6 +1751,8 @@ void ordenamiento() {
 				auxActual->telefono = tTel;
 				auxActual->especie = tEsp;
 				auxActual->motivoConsulta = tMotivo;
+				auxActual->image[0] = tImg0;
+				auxActual->image[1] = tImg1;
 				auxActual->fechaString = tFechaStr;
 				auxActual->horaString = tHoraStr;
 				auxActual->year = tY;
@@ -1672,6 +1770,8 @@ void ordenamiento() {
 				string tTel = auxProx->telefono;
 				string tEsp = auxProx->especie;
 				string tMotivo = auxProx->motivoConsulta;
+				string tImg0 = auxProx->image[0];
+				string tImg1 = auxProx->image[1];
 				string tFechaStr = auxProx->fechaString;
 				string tHoraStr = auxProx->horaString;
 				int tY = auxProx->year;
@@ -1688,6 +1788,8 @@ void ordenamiento() {
 				auxProx->telefono = auxActual->telefono;
 				auxProx->especie = auxActual->especie;
 				auxProx->motivoConsulta = auxActual->motivoConsulta;
+				auxProx->image[0] = auxActual->image[0];
+				auxProx->image[1] = auxActual->image[1];
 				auxProx->fechaString = auxActual->fechaString;
 				auxProx->horaString = auxActual->horaString;
 				auxProx->year = auxActual->year;
@@ -1704,6 +1806,8 @@ void ordenamiento() {
 				auxActual->telefono = tTel;
 				auxActual->especie = tEsp;
 				auxActual->motivoConsulta = tMotivo;
+				auxActual->image[0] = tImg0;
+				auxActual->image[1] = tImg1;
 				auxActual->fechaString = tFechaStr;
 				auxActual->horaString = tHoraStr;
 				auxActual->year = tY;
@@ -1722,6 +1826,7 @@ void ordenamiento() {
 }
 
 void impresion() {
+	aux = origin;
 	while (aux != NULL) {
 		string display = aux->nombreMascota + "  |  " + aux->fechaString + "  |  " + aux->horaString;
 		char buffL[100];

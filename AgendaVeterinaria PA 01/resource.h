@@ -7,7 +7,6 @@
 #define IDD_NUEVACITA                   105
 #define IDD_PAGOCITA                    107
 #define IDD_EDITARCITA                  110
-#define IDD_EDITDOCTOR1                 111
 #define IDD_PRIMERDOCTOR                111
 #define IDR_MENU1                       123
 #define BMP_MENU_DOCTOR                 1002
@@ -76,7 +75,7 @@
 #define ST_PORMES                       1096
 #define BTN_EC_CANCELA                  1097
 #define ST_NC_FECHAACTUAL               1098
-#define BTN_NC_EXAMFOTO                 1099
+#define BTN_NC_FOTOMASCOTA              1099
 #define BMP_NC_MASCOTA                  1100
 #define BTN_NC_NEXT                     1101
 #define BTN_NC_PREV                     1102

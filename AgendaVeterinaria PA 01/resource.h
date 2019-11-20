@@ -7,7 +7,6 @@
 #define IDD_NUEVACITA                   105
 #define IDD_PAGOCITA                    107
 #define IDD_PRIMERDOCTOR                111
-#define IDD_NUEVACITA1                  112
 #define IDD_EDITARCITA                  112
 #define IDR_MENU1                       123
 #define BMP_MENU_DOCTOR                 1002
@@ -78,6 +77,9 @@
 #define BTN_NC_PREV                     1102
 #define BTN_EDM_DOCTORFOTO              1102
 #define BTN_NC_CANCEL                   1104
+#define BTN_NC_BORRARFOTO               1105
+#define BTN_EDM_BORRARFOTO              1107
+#define IDC_BUTTON1                     1108
 #define BTN_EDITARCITA                  40036
 #define BTN_PAGARCITA                   40038
 #define BTN_ELIMINARCITA                40040
@@ -92,7 +94,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        126
 #define _APS_NEXT_COMMAND_VALUE         40050
-#define _APS_NEXT_CONTROL_VALUE         1105
+#define _APS_NEXT_CONTROL_VALUE         1109
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

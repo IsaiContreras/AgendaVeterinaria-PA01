@@ -68,16 +68,20 @@ int indexImage;
 #pragma region PrototipoFunciones
 bool verificarNum(string);
 bool verificarAlfa(string);
+bool introducirDatos(HWND);
 void ordenamiento();
 void impresion();
+void fotoDoctor(HWND);
+void borrarFotoMascota(HWND);
+void borrarFotoDoctor(HWND);
 #pragma endregion
 
 #pragma region PrototipoFunciones Ventana
 BOOL CALLBACK agendaVentanaPrincipal(HWND, UINT, WPARAM, LPARAM);
 BOOL CALLBACK nuevaCita(HWND, UINT, WPARAM, LPARAM);
 BOOL CALLBACK editarCita(HWND, UINT, WPARAM, LPARAM);
-BOOL CALLBACK editarInfoDoctor(HWND, UINT, WPARAM, LPARAM);
 BOOL CALLBACK pagarCita(HWND, UINT, WPARAM, LPARAM);
+BOOL CALLBACK editarInfoDoctor(HWND, UINT, WPARAM, LPARAM);
 BOOL CALLBACK primerDoctor(HWND, UINT, WPARAM, LPARAM);
 #pragma endregion
 
@@ -139,20 +143,7 @@ BOOL CALLBACK agendaVentanaPrincipal(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
 		SetWindowText(hLblListCount, listaC);
 	}break;
 	case WM_COMMAND: {
-		if (LOWORD(wParam) == BTN_SALIR && HIWORD(wParam) == BN_CLICKED) {
-			if (MessageBox(hwnd, "¿Seguro que quiere salir del programa?", "SALIR", MB_YESNO) == IDYES) {
-				salida = true;
-				KillTimer(hwnd, TM_RELOJ);
-				DestroyWindow(hAgenda);
-			}
-			break;
-		}
-		if (LOWORD(wParam) == BTN_EDITDOCINFO && HIWORD(wParam) == BN_CLICKED) {
-			KillTimer(hAgenda, TM_RELOJ);
-			DestroyWindow(hAgenda);
-			hEditarDoctor = CreateDialog(hInstGlobal, MAKEINTRESOURCE(IDD_EDITDOCTOR), NULL, editarInfoDoctor);
-			ShowWindow(hEditarDoctor, SW_SHOW);
-		}
+		//OPCIONES DE BARRA DE MENU
 		if (LOWORD(wParam) == BTN_NUEVACITA && HIWORD(wParam) == BN_CLICKED) {
 			aux = origin;
 			KillTimer(hAgenda, TM_RELOJ);
@@ -161,6 +152,21 @@ BOOL CALLBACK agendaVentanaPrincipal(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
 			ShowWindow(hNuevaCita, SW_SHOW);
 			SetTimer(hNuevaCita, TM_NC_RELOJ, 1000, NULL);
 		}
+		if (LOWORD(wParam) == BTN_EDITDOCINFO && HIWORD(wParam) == BN_CLICKED) {
+			KillTimer(hAgenda, TM_RELOJ);
+			DestroyWindow(hAgenda);
+			hEditarDoctor = CreateDialog(hInstGlobal, MAKEINTRESOURCE(IDD_EDITDOCTOR), NULL, editarInfoDoctor);
+			ShowWindow(hEditarDoctor, SW_SHOW);
+		}
+		if (LOWORD(wParam) == BTN_SALIR && HIWORD(wParam) == BN_CLICKED) {
+			if (MessageBox(hwnd, "¿Seguro que quiere salir del programa?", "SALIR", MB_YESNO) == IDYES) {
+				salida = true;
+				KillTimer(hwnd, TM_RELOJ);
+				DestroyWindow(hAgenda);
+			}
+			break;
+		}
+		//GESTIÓN DE CITAS
 		if (LOWORD(wParam) == BTN_SELECT && HIWORD(wParam) == BN_CLICKED) {
 			int index = SendMessage(hLbAgenda, LB_GETCURSEL, 0, 0);
 			if (index > -1) {
@@ -252,16 +258,16 @@ BOOL CALLBACK agendaVentanaPrincipal(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
 				EnableWindow(hBtnEliminar, true);
 			}
 		}
-		if (LOWORD(wParam) == BTN_PAGARCITA && HIWORD(wParam) == BN_CLICKED) {
-			DestroyWindow(hAgenda);
-			hPagarCita = CreateDialog(hInstGlobal, MAKEINTRESOURCE(IDD_PAGOCITA), NULL, pagarCita);
-			ShowWindow(hPagarCita, SW_SHOW);
-		}
 		if (LOWORD(wParam) == BTN_EDITARCITA && HIWORD(wParam) == BN_CLICKED) {
 			DestroyWindow(hAgenda);
 			hEditarCita = CreateDialog(hInstGlobal, MAKEINTRESOURCE(IDD_EDITARCITA), NULL, editarCita);
 			ShowWindow(hEditarCita, SW_SHOW);
 			SetTimer(hEditarCita, TM_EDC_RELOJ, 1000, NULL);
+		}
+		if (LOWORD(wParam) == BTN_PAGARCITA && HIWORD(wParam) == BN_CLICKED) {
+			DestroyWindow(hAgenda);
+			hPagarCita = CreateDialog(hInstGlobal, MAKEINTRESOURCE(IDD_PAGOCITA), NULL, pagarCita);
+			ShowWindow(hPagarCita, SW_SHOW);
 		}
 		if (LOWORD(wParam) == BTN_ELIMINARCITA && HIWORD(wParam) == BN_CLICKED) {
 			if (MessageBox(hwnd, "¿Seguro que desea eliminar esta cita?", "Eliminar Cita", MB_OKCANCEL) == IDOK) {
@@ -393,23 +399,7 @@ BOOL CALLBACK nuevaCita(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 		indexImage = 0;
 	}break;
 	case WM_COMMAND: {
-		if (LOWORD(wParam) == BTN_SALIR && HIWORD(wParam) == BN_CLICKED) {
-			if (MessageBox(hwnd, "¿Seguro que quiere salir del programa?", "SALIR", MB_YESNO) == IDYES) {
-				if (aux->next == NULL && aux->prev == NULL) {
-					delete aux;
-					aux = origin = NULL;
-				}
-				else {
-					aux->prev->next = NULL;
-					delete aux;
-					aux = origin;
-				}
-
-				salida = true;
-				KillTimer(hwnd, TM_NC_RELOJ);
-				DestroyWindow(hNuevaCita);
-			}
-		}
+		//OPCIONES BARRA DE MENU
 		if (LOWORD(wParam) == BTN_AGENDA && HIWORD(wParam) == BN_CLICKED) {
 			if (aux->next == NULL && aux->prev == NULL) {
 				delete aux;
@@ -443,6 +433,24 @@ BOOL CALLBACK nuevaCita(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 			hEditarDoctor = CreateDialog(hInstGlobal, MAKEINTRESOURCE(IDD_EDITDOCTOR), NULL, editarInfoDoctor);
 			ShowWindow(hEditarDoctor, SW_SHOW);
 		}
+		if (LOWORD(wParam) == BTN_SALIR && HIWORD(wParam) == BN_CLICKED) {
+			if (MessageBox(hwnd, "¿Seguro que quiere salir del programa?", "SALIR", MB_YESNO) == IDYES) {
+				if (aux->next == NULL && aux->prev == NULL) {
+					delete aux;
+					aux = origin = NULL;
+				}
+				else {
+					aux->prev->next = NULL;
+					delete aux;
+					aux = origin;
+				}
+
+				salida = true;
+				KillTimer(hwnd, TM_NC_RELOJ);
+				DestroyWindow(hNuevaCita);
+			}
+		}
+		//OPCIONES CITA NUEVA
 		if (LOWORD(wParam) == BTN_NC_NEXT && HIWORD(wParam) == BN_CLICKED) {
 			indexImage = 1;
 			HWND hBtnIndexImage = GetDlgItem(hwnd, BTN_NC_NEXT);
@@ -490,6 +498,9 @@ BOOL CALLBACK nuevaCita(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 			aux->image[indexImage] = foto;
 			break;
 		}
+		if (LOWORD(wParam) == BTN_NC_BORRARFOTO && HIWORD(wParam) == BN_CLICKED) {
+			borrarFotoMascota(hwnd);
+		}
 		if (LOWORD(wParam) == BTN_NC_CANCEL && HIWORD(wParam) == BN_CLICKED) {
 			if (aux->next == NULL && aux->prev == NULL) {
 				delete aux;
@@ -508,282 +519,17 @@ BOOL CALLBACK nuevaCita(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 			SetTimer(hAgenda, TM_RELOJ, 1000, NULL);
 		}
 		if (LOWORD(wParam) == IDOK && HIWORD(wParam) == BN_CLICKED) {
-			char buff[256];
-			char buffName[50];
-			int length;
-			HWND hEdNombreD = GetDlgItem(hwnd, EDT_NC_DNOMBRE);
-			length = GetWindowTextLength(hEdNombreD);
-			if (length > 0) {
-				GetWindowText(hEdNombreD, buff, length+1);
-				string s(buff);
-				if (verificarNum(s)) {
-					MessageBox(hwnd, "El nombre de dueño no deben contener números.", "AVISO", MB_ICONEXCLAMATION);
-					break;
-				}
-				else {
-					aux->nombreDueño = s;
-				}
-			}
-			else {
-				MessageBox(hwnd, "Falta llenar el nombre del dueño.", "AVISO", MB_ICONEXCLAMATION);
-				break;
-			}
+			if (introducirDatos(hwnd)) {
+				MessageBox(hwnd, "Cita agregada.", "DATOS CORRECTOS", MB_OK);
 
-			HWND hEdTel = GetDlgItem(hwnd, EDT_NC_TELEFONO);
-			length = GetWindowTextLength(hEdTel);
-			if (length > 0) {
-				if (length == 8 || length == 10 || length == 12) {
-					GetWindowText(hEdTel, buff, length + 1);
-					string s(buff);
-					aux->telefono = s;
-				}
-				else {
-					MessageBox(hwnd, "El teléfono debe ser de 8, 10 o 12 caracteres.", "AVISO", MB_ICONEXCLAMATION);
-					break;
-				}
-			}
-			else {
-				MessageBox(hwnd, "Falta llenar el teléfono.", "AVISO", MB_ICONEXCLAMATION);
-				break;
-			}
+				aux = origin;
 
-			HWND hEdNombreM = GetDlgItem(hwnd, EDT_NC_MNOMBRE);
-			length = GetWindowTextLength(hEdNombreM);
-			if (length > 0) {
-				GetWindowText(hEdNombreM, buffName, length+1);
-				string s(buffName);
-				if (verificarNum(s)) {
-					MessageBox(hwnd, "El nombre de la mascota no deben contener números.", "AVISO", MB_ICONEXCLAMATION);
-					break;
-				}
-				else {
-					aux->nombreMascota = s;
-				}
+				KillTimer(hNuevaCita, TM_NC_RELOJ);
+				DestroyWindow(hNuevaCita);
+				hAgenda = CreateDialog(hInstGlobal, MAKEINTRESOURCE(IDD_AGENDA), NULL, agendaVentanaPrincipal);
+				ShowWindow(hAgenda, SW_SHOW);
+				SetTimer(hAgenda, TM_RELOJ, 1000, NULL);
 			}
-			else {
-				MessageBox(hwnd, "Falta llenar el nombre de la mascota.", "AVISO", MB_ICONEXCLAMATION);
-				break;
-			}
-
-			HWND hCbEspecie = GetDlgItem(hwnd, CB_NC_ESPECIE);
-			int indice = SendMessage(hCbEspecie, CB_GETCURSEL, 0, 0);
-			if (indice == -1) {
-				MessageBox(hwnd, "Seleccione la especie de su mascota.", "AVISO", MB_ICONEXCLAMATION);
-				break;
-			}
-			else {
-				length = GetWindowTextLength(hCbEspecie);
-				GetWindowText(hCbEspecie, buff, length+1);
-				string s(buff);
-				aux->especie = s;
-				aux->especieIndex = indice;
-			}
-
-			HWND hTpFecha = GetDlgItem(hwnd, IDC_DATETIMEPICKER1);
-			length = GetWindowTextLength(hTpFecha);
-			GetWindowText(hTpFecha, buff, length+4);
-			string f(buff);
-			string Y = f.substr(6, 4);
-			string m = f.substr(3, 2);
-			string d = f.substr(0, 2);
-			HWND hTpHora = GetDlgItem(hwnd, IDC_DATETIMEPICKER2);
-			GetWindowText(hTpHora, buff, 15);
-			string h(buff);
-			string I = h.substr(0, 2);
-			string min = h.substr(3, 2);
-			string amPm = h.substr(9, 1);
-			string stdHour;
-			//VALIDCIÓN DE FECHA NO ANTIGUA
-			int yearComp = stoi(Y);
-			int monthComp = stoi(m);
-			int dayComp = stoi(d);
-			int hourComp = stoi(I);
-			int minuteComp = stoi(min);
-			if (yearComp >= tiempoActual->tm_year + 1900) {
-				if (yearComp == tiempoActual->tm_year + 1900) {
-					if (monthComp >= tiempoActual->tm_mon + 1) {
-						if (monthComp == tiempoActual->tm_mon + 1) {
-							if (dayComp >= tiempoActual->tm_mday) {
-								if (dayComp == tiempoActual->tm_mday) {
-									if (amPm == "p") {
-										if (hourComp != 12) {
-											hourComp += 12;
-										}
-									}
-									if (amPm == "a" && hourComp == 12) {
-										hourComp -= 12;
-									}
-									if (hourComp >= tiempoActual->tm_hour) {
-										if (hourComp == tiempoActual->tm_hour) {
-											if (minuteComp > tiempoActual->tm_min) {
-												aux->year = yearComp;
-												aux->month = monthComp;
-												aux->day = dayComp;
-												aux->hour = hourComp;
-												aux->minutes = minuteComp;
-											}
-											else {
-												MessageBox(hwnd, "La hora no debe ser igual o pasada al tiempo actual.", "AVISO", MB_ICONEXCLAMATION);
-												break;
-											}
-										}
-										else {
-											aux->year = yearComp;
-											aux->month = monthComp;
-											aux->day = dayComp;
-											aux->hour = hourComp;
-											aux->minutes = minuteComp;
-										}
-									}
-									else {
-										MessageBox(hwnd, "La hora no debe ser igual o pasada al tiempo actual.", "AVISO", MB_ICONEXCLAMATION);
-										break;
-									}
-								}
-								else {
-									if (amPm == "p") {
-										if (hourComp != 12) {
-											hourComp += 12;
-										}
-									}
-									if (amPm == "a" && hourComp == 12) {
-										hourComp -= 12;
-									}
-									aux->year = yearComp;
-									aux->month = monthComp;
-									aux->day = dayComp;
-									aux->hour = hourComp;
-									aux->minutes = minuteComp;
-								}
-							}
-							else {
-								MessageBox(hwnd, "Coloque fecha válida, el día debe ser actual o próximo.", "AVISO", MB_ICONEXCLAMATION);
-								break;
-							}
-						}
-						else {
-							if (amPm == "p") {
-								if (hourComp != 12) {
-									hourComp += 12;
-								}
-							}
-							if (amPm == "a" && hourComp == 12) {
-								hourComp -= 12;
-							}
-							aux->year = yearComp;
-							aux->month = monthComp;
-							aux->day = dayComp;
-							aux->hour = hourComp;
-							aux->minutes = minuteComp;
-						}
-					}
-					else {
-						MessageBox(hwnd, "Coloque fecha válida, el mes debe ser actual o próximo.", "AVISO", MB_ICONEXCLAMATION);
-						break;
-					}
-				}
-				else {
-					if (amPm == "p") {
-						if (hourComp != 12) {
-							hourComp += 12;
-						}
-					}
-					if (amPm == "a" && hourComp == 12) {
-						hourComp -= 12;
-					}
-					aux->year = yearComp;
-					aux->month = monthComp;
-					aux->day = dayComp;
-					aux->hour = hourComp;
-					aux->minutes = minuteComp;
-				}
-			}
-			else {
-				MessageBox(hwnd, "Coloque fecha válida, el año debe ser actual o próximo.", "AVISO", MB_ICONEXCLAMATION);
-				break;
-			}
-			//VALIDACIÓN DE FECHA NO REPETIDA
-			if (amPm == "p") {
-				stdHour = I + ":" + min + " P.M.";
-			}
-			else {
-				stdHour = I + ":" + min + " A.M.";
-			}
-			CITA *auxCF = origin;
-			bool fechaRepetida = false;
-			while (auxCF != NULL) {
-				if (f.compare(auxCF->fechaString) == 0) {
-					if (stdHour.compare(auxCF->horaString) == 0) {
-						fechaRepetida = true;
-						break;
-					}
-				}
-				auxCF = auxCF->next;
-			}
-			if (fechaRepetida) {
-				MessageBox(hwnd, "La fecha y hora de la cita ya no está disponible. Ya existe otra cita en este horario.", "AVISO", MB_ICONEXCLAMATION);
-				break;
-			}
-			else {
-				aux->fechaString = f;
-				aux->horaString = stdHour;
-			}
-
-			HWND hEdMotivo = GetDlgItem(hwnd, EDT_NC_MOTIVO);
-			length = GetWindowTextLength(hEdMotivo);
-			if (length > 0) {
-				GetWindowText(hEdMotivo, buff, length + 1);
-				string m(buff);
-				aux->motivoConsulta = m;
-			}
-			else {
-				MessageBox(hwnd, "Especifique el motivo de la consulta.", "AVISO", MB_ICONEXCLAMATION);
-				break;
-			}
-
-			HWND hEdCosto = GetDlgItem(hwnd, EDT_NC_COSTO);
-			length = GetWindowTextLength(hEdCosto);
-			if (length > 0) {
-				GetWindowText(hEdCosto, buff, length + 1);
-				string s(buff);
-				if (verificarAlfa(s)) {
-					MessageBox(hwnd, "El costo no debe contener letras o más de un punto decimal. Corrija.", "AVISO", MB_ICONEXCLAMATION);
-					break;
-				}
-				else {
-					aux->costo = stof(s);
-				}
-			}
-			else {
-				MessageBox(hwnd, "Agregue el costo de la consulta.", "Aviso", MB_ICONEXCLAMATION);
-				break;
-			}
-
-			if (IsDlgButtonChecked(hwnd, RD_NC_CONTADO) == BST_CHECKED) {
-				aux->formaPago = 1;
-			}
-			else if (IsDlgButtonChecked(hwnd, RD_NC_3MESES) == BST_CHECKED) {
-				aux->formaPago = 3;
-			}
-			else if (IsDlgButtonChecked(hwnd, RD_NC_6MESES) == BST_CHECKED) {
-				aux->formaPago = 6;
-			}
-			else if (IsDlgButtonChecked(hwnd, RD_NC_9MESES) == BST_CHECKED) {
-				aux->formaPago = 9;
-			}
-			else {
-				MessageBox(hwnd, "Seleccione una forma de pago.", "AVISO", MB_ICONEXCLAMATION);
-				break;
-			}
-			MessageBox(hwnd, "Cita agregada.", "DATOS CORRECTOS", MB_OK);
-			
-			aux = origin;
-
-			KillTimer(hNuevaCita, TM_NC_RELOJ);
-			DestroyWindow(hNuevaCita);
-			hAgenda = CreateDialog(hInstGlobal, MAKEINTRESOURCE(IDD_AGENDA), NULL, agendaVentanaPrincipal);
-			ShowWindow(hAgenda, SW_SHOW);
-			SetTimer(hAgenda, TM_RELOJ, 1000, NULL);
 		}
 	}break;
 	case WM_TIMER: {
@@ -802,101 +548,180 @@ BOOL CALLBACK nuevaCita(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 	return FALSE;
 }
 
-BOOL CALLBACK editarInfoDoctor(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+BOOL CALLBACK editarCita(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 	switch (msg) {
 	case WM_INITDIALOG: {
 		hBarraMenu = GetMenu(hwnd);
+		EnableMenuItem(hBarraMenu, BTN_NUEVACITA, MF_DISABLED);
+		EnableMenuItem(hBarraMenu, BTN_AGENDA, MF_DISABLED);
 		EnableMenuItem(hBarraMenu, BTN_EDITDOCINFO, MF_DISABLED);
-		EnableMenuItem(hBarraMenu, BTN_AGENDA, MF_ENABLED);
-		EnableMenuItem(hBarraMenu, BTN_NUEVACITA, MF_ENABLED);
 
-		HWND hEdNombreMedico = GetDlgItem(hwnd, EDT_EDM_DOCTOR);
-		HWND hEdCedula = GetDlgItem(hwnd, EDT_EDM_CEDULA);
-		SetWindowText(hEdNombreMedico, nombreMedico);
-		SetWindowText(hEdCedula, cedula);
-		hPcFotoDoctor = GetDlgItem(hwnd, BMP_EDM_DOCTOR);
-		hBmpDoctor = (HBITMAP)LoadImage(NULL, chDirFotoDoc, IMAGE_BITMAP, 100, 120, LR_LOADFROMFILE);
+		HWND hCbEspecie = GetDlgItem(hwnd, CB_NC_ESPECIE);
+		SendMessage(hCbEspecie, CB_ADDSTRING, 0, (LPARAM)"Perro");
+		SendMessage(hCbEspecie, CB_ADDSTRING, 0, (LPARAM)"Gato");
+		SendMessage(hCbEspecie, CB_ADDSTRING, 0, (LPARAM)"Conejo");
+		SendMessage(hCbEspecie, CB_ADDSTRING, 0, (LPARAM)"Hámster");
+		SendMessage(hCbEspecie, CB_ADDSTRING, 0, (LPARAM)"Pájaro");
+		SendMessage(hCbEspecie, CB_ADDSTRING, 0, (LPARAM)"Loro");
+		SendMessage(hCbEspecie, CB_ADDSTRING, 0, (LPARAM)"Pez");
+		SendMessage(hCbEspecie, CB_ADDSTRING, 0, (LPARAM)"Tortuga");
+		SendMessage(hCbEspecie, CB_ADDSTRING, 0, (LPARAM)"Reptil o anfibio");
+
+		HWND hLblNombreMedicoNC = GetDlgItem(hwnd, ST_NC_DOCTOR);
+		HWND hLblCedulaNC = GetDlgItem(hwnd, ST_NC_CEDULA);
+		SetWindowText(hLblNombreMedicoNC, nombreMedico);
+		hPcFotoDoctor = GetDlgItem(hwnd, BMP_NC_DOCTOR);
+		hBmpDoctor = (HBITMAP)LoadImage(NULL, chDirFotoDoc, IMAGE_BITMAP, 75, 90, LR_LOADFROMFILE);
 		SendMessage(hPcFotoDoctor, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hBmpDoctor);
+		SetWindowText(hLblCedulaNC, cedula);
+
+		hLblReloj = GetDlgItem(hwnd, ST_NC_RELOJ);
+
+		strcpy(chCambioFoto, aux->image[0].c_str());
+		hPcFotoMascota = GetDlgItem(hwnd, BMP_NC_MASCOTA);
+		hBmpMascota = (HBITMAP)LoadImage(NULL, chCambioFoto, IMAGE_BITMAP, 100, 120, LR_LOADFROMFILE);
+		SendMessage(hPcFotoMascota, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hBmpMascota);
+		indexImage = 0;
+		tempImg[0] = aux->image[0];
+		tempImg[1] = aux->image[1];
+
+		char buffer[80];
+		HWND hEdNombreD = GetDlgItem(hwnd, EDT_NC_DNOMBRE);
+		strcpy(buffer, aux->nombreDueño.c_str());
+		SetWindowText(hEdNombreD, buffer);
+
+		HWND hEdTelefono = GetDlgItem(hwnd, EDT_NC_TELEFONO);
+		strcpy(buffer, aux->telefono.c_str());
+		SetWindowText(hEdTelefono, buffer);
+
+		HWND hEdNombreM = GetDlgItem(hwnd, EDT_NC_MNOMBRE);
+		strcpy(buffer, aux->nombreMascota.c_str());
+		SetWindowText(hEdNombreM, buffer);
+
+		SendMessage(hCbEspecie, CB_SETCURSEL, aux->especieIndex, 0);
+
+		HWND hStFechaA = GetDlgItem(hwnd, ST_NC_FECHAACTUAL);
+		string fechaA = "Fecha de la cita: " + aux->fechaString + " a las " + aux->horaString;
+		strcpy(buffer, fechaA.c_str());
+		SetWindowText(hStFechaA, buffer);
+
+		HWND hEdMotivo = GetDlgItem(hwnd, EDT_NC_MOTIVO);
+		strcpy(buffer, aux->motivoConsulta.c_str());
+		SetWindowText(hEdMotivo, buffer);
+
+		HWND hEdCosto = GetDlgItem(hwnd, EDT_NC_COSTO);
+		snprintf(buffer, sizeof(buffer), "%.2f", aux->costo);
+		SetWindowText(hEdCosto, buffer);
+
+		if (aux->formaPago == 3) {
+			HWND hRdMeses = GetDlgItem(hwnd, RD_NC_3MESES);
+			SendMessage(hRdMeses, BM_SETCHECK, BST_CHECKED, 1);
+		}
+		else if (aux->formaPago == 6) {
+			HWND hRdMeses = GetDlgItem(hwnd, RD_NC_6MESES);
+			SendMessage(hRdMeses, BM_SETCHECK, BST_CHECKED, 1);
+		}
+		else if (aux->formaPago == 9) {
+			HWND hRdMeses = GetDlgItem(hwnd, RD_NC_9MESES);
+			SendMessage(hRdMeses, BM_SETCHECK, BST_CHECKED, 1);
+		}
+		else {
+			HWND hRdMeses = GetDlgItem(hwnd, RD_NC_CONTADO);
+			SendMessage(hRdMeses, BM_SETCHECK, BST_CHECKED, 1);
+		}
 	}break;
-	case WM_COMMAND: {
-		
+	case WM_COMMAND:
+		//OPCIONES BARRA MENU
 		if (LOWORD(wParam) == BTN_SALIR && HIWORD(wParam) == BN_CLICKED) {
 			if (MessageBox(hwnd, "¿Seguro que quiere salir del programa?", "SALIR", MB_YESNO) == IDYES) {
 				salida = true;
-				DestroyWindow(hEditarDoctor);
+				KillTimer(hwnd, TM_EDC_RELOJ);
+				DestroyWindow(hEditarCita);
 			}
 			break;
 		}
-		if (LOWORD(wParam) == BTN_AGENDA && HIWORD(wParam) == BN_CLICKED) {
-			DestroyWindow(hEditarDoctor);
+		//OPCIONES DE EDICIÓN DE CITA
+		if (LOWORD(wParam) == BTN_NC_NEXT && HIWORD(wParam) == BN_CLICKED) {
+			indexImage = 1;
+			HWND hBtnIndexImage = GetDlgItem(hwnd, BTN_NC_NEXT);
+			EnableWindow(hBtnIndexImage, false);
+			hBtnIndexImage = GetDlgItem(hwnd, BTN_NC_PREV);
+			EnableWindow(hBtnIndexImage, true);
+
+			strcpy(chCambioFoto, aux->image[1].c_str());
+			hPcFotoMascota = GetDlgItem(hwnd, BMP_NC_MASCOTA);
+			hBmpMascota = (HBITMAP)LoadImage(NULL, chCambioFoto, IMAGE_BITMAP, 95, 114, LR_LOADFROMFILE);
+			SendMessage(hPcFotoMascota, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hBmpMascota);
+			break;
+		}
+		if (LOWORD(wParam) == BTN_NC_PREV && HIWORD(wParam) == BN_CLICKED) {
+			indexImage = 0;
+			HWND hBtnIndexImage = GetDlgItem(hwnd, BTN_NC_PREV);
+			EnableWindow(hBtnIndexImage, false);
+			hBtnIndexImage = GetDlgItem(hwnd, BTN_NC_NEXT);
+			EnableWindow(hBtnIndexImage, true);
+
+			strcpy(chCambioFoto, aux->image[0].c_str());
+			hPcFotoMascota = GetDlgItem(hwnd, BMP_NC_MASCOTA);
+			hBmpMascota = (HBITMAP)LoadImage(NULL, chCambioFoto, IMAGE_BITMAP, 95, 114, LR_LOADFROMFILE);
+			SendMessage(hPcFotoMascota, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hBmpMascota);
+			break;
+		}
+		if (LOWORD(wParam) == BTN_NC_FOTOMASCOTA && HIWORD(wParam) == BN_CLICKED) {
+			OPENFILENAME ofnFotoMascota;
+			ZeroMemory(&ofnFotoMascota, sizeof(ofnFotoMascota));
+
+			ofnFotoMascota.hwndOwner = hwnd;
+			ofnFotoMascota.lStructSize = sizeof(ofnFotoMascota);
+			ofnFotoMascota.lpstrFile = chCambioFoto;
+			ofnFotoMascota.nMaxFile = MAX_PATH;
+			ofnFotoMascota.lpstrDefExt = "bmp";
+			ofnFotoMascota.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
+			ofnFotoMascota.lpstrFilter = "BMP Images\0*.bmp\0All Files\0*.*\0";
+			if (GetOpenFileName(&ofnFotoMascota)) {
+				hPcFotoMascota = GetDlgItem(hwnd, BMP_NC_MASCOTA);
+				hBmpMascota = (HBITMAP)LoadImage(NULL, chCambioFoto, IMAGE_BITMAP, 95, 114, LR_LOADFROMFILE);
+				SendMessage(hPcFotoMascota, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hBmpMascota);
+			}
+
+			string foto(chCambioFoto);
+			aux->image[indexImage] = foto;
+			break;
+		}
+		if (LOWORD(wParam) == BTN_NC_BORRARFOTO && HIWORD(wParam) == BN_CLICKED) {
+			borrarFotoMascota(hwnd);
+		}
+		if (LOWORD(wParam) == BTN_NC_CANCEL && HIWORD(wParam) == BN_CLICKED) {
+			aux->image[0] = tempImg[0];
+			aux->image[1] = tempImg[1];
+
+			aux = origin;
+			KillTimer(hwnd, TM_EDC_RELOJ);
+			DestroyWindow(hEditarCita);
 			hAgenda = CreateDialog(hInstGlobal, MAKEINTRESOURCE(IDD_AGENDA), NULL, agendaVentanaPrincipal);
 			ShowWindow(hAgenda, SW_SHOW);
 			SetTimer(hAgenda, TM_RELOJ, 1000, NULL);
 		}
-		if (LOWORD(wParam) == BTN_NUEVACITA && HIWORD(wParam) == BN_CLICKED) {
-			DestroyWindow(hEditarDoctor);
-			hNuevaCita = CreateDialog(hInstGlobal, MAKEINTRESOURCE(IDD_NUEVACITA), NULL, nuevaCita);
-			ShowWindow(hNuevaCita, SW_SHOW);
-			SetTimer(hNuevaCita, TM_NC_RELOJ, 1000, NULL);
-		}
-		if (LOWORD(wParam) == ID_EDM_CANCELA && HIWORD(wParam) == BN_CLICKED) {
-			DestroyWindow(hEditarDoctor);
-			hAgenda = CreateDialog(hInstGlobal, MAKEINTRESOURCE(IDD_AGENDA), NULL, agendaVentanaPrincipal);
-			ShowWindow(hAgenda, SW_SHOW);
-			SetTimer(hAgenda, TM_RELOJ, 1000, NULL);
-			break;
-		}
-		if (LOWORD(wParam) == BTN_EDM_DOCTOR && HIWORD(wParam) == BN_CLICKED) {
-			OPENFILENAME ofnFotoDoctorCambio;
-			ZeroMemory(&ofnFotoDoctorCambio, sizeof(ofnFotoDoctorCambio));
+		if (LOWORD(wParam) == IDOK && HIWORD(wParam) == BN_CLICKED) {
+			if (introducirDatos(hwnd)) {
+				MessageBox(hwnd, "Cita Modificada.", "DATOS CORRECTOS", MB_OK);
 
-			ofnFotoDoctorCambio.hwndOwner = hwnd;
-			ofnFotoDoctorCambio.lStructSize = sizeof(ofnFotoDoctorCambio);
-			ofnFotoDoctorCambio.lpstrFile = chCambioFoto;
-			ofnFotoDoctorCambio.nMaxFile = MAX_PATH;
-			ofnFotoDoctorCambio.lpstrDefExt = "bmp";
-			ofnFotoDoctorCambio.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
-			ofnFotoDoctorCambio.lpstrFilter = "BMP Images\0*.bmp\0All Files\0*.*\0";
-			if (GetOpenFileName(&ofnFotoDoctorCambio)) {
-				hPcFotoDoctor = GetDlgItem(hwnd, BMP_EDM_DOCTOR);
-				hBmpDoctor = (HBITMAP)LoadImage(NULL, chCambioFoto, IMAGE_BITMAP, 100, 120, LR_LOADFROMFILE);
-				SendMessage(hPcFotoDoctor, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hBmpDoctor);
+				aux = origin;
+
+				KillTimer(hEditarCita, TM_EDC_RELOJ);
+				DestroyWindow(hEditarCita);
+				hAgenda = CreateDialog(hInstGlobal, MAKEINTRESOURCE(IDD_AGENDA), NULL, agendaVentanaPrincipal);
+				ShowWindow(hAgenda, SW_SHOW);
+				SetTimer(hAgenda, TM_RELOJ, 1000, NULL);
 			}
-			break;
 		}
-		if (LOWORD(wParam = ID_EDM_OK && HIWORD(wParam) == BN_CLICKED)) {
-			HWND hEdNombreMedico = GetDlgItem(hwnd, EDT_EDM_DOCTOR);
-			int length = GetWindowTextLength(hEdNombreMedico);
-			if (length > 0) {
-				GetWindowText(hEdNombreMedico, nombreMedico, length + 1);
-				string m(nombreMedico);
-				if (verificarNum(m)) {
-					MessageBox(hwnd, "El nombre del médico no debe contener números.", "AVISO", MB_ICONEXCLAMATION);
-					break;
-				}
-			}
-			else {
-				MessageBox(hwnd, "Llene el nombre del médico.", "AVISO", MB_ICONEXCLAMATION);
-				break;
-			}
-
-			HWND hEdCedula = GetDlgItem(hwnd, EDT_EDM_CEDULA);
-			length = GetWindowTextLength(hEdCedula);
-			if (length > 0) {
-				GetWindowText(hEdCedula, cedula, length + 1);
-			}
-			else {
-				MessageBox(hwnd, "Llene la cédula.", "AVISO", MB_ICONEXCLAMATION);
-				break;
-			}
-
-			strcpy(chDirFotoDoc, chCambioFoto);
-
-			DestroyWindow(hEditarDoctor);
-			hAgenda = CreateDialog(hInstGlobal, MAKEINTRESOURCE(IDD_AGENDA), NULL, agendaVentanaPrincipal);
-			ShowWindow(hAgenda, SW_SHOW);
-			SetTimer(hAgenda, TM_RELOJ, 1000, NULL);
-		}
+		break;
+	case WM_TIMER: {
+		time(&allTime);
+		tiempoActual = localtime(&allTime);
+		char reloj[80];
+		strftime(reloj, 80, "Hoy es: %d/%m/%Y  %I:%M:%S", tiempoActual);
+		SetWindowText(hLblReloj, reloj);
 	}break;
 	case WM_DESTROY:
 		if (salida) {
@@ -993,6 +818,36 @@ BOOL CALLBACK pagarCita(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 		}
 	}break;
 	case WM_COMMAND:
+		//OPCIONES BARRA DE MENU
+		if (LOWORD(wParam) == BTN_AGENDA && HIWORD(wParam) == BN_CLICKED) {
+			aux = origin;
+			DestroyWindow(hPagarCita);
+			hAgenda = CreateDialog(hInstGlobal, MAKEINTRESOURCE(IDD_AGENDA), NULL, agendaVentanaPrincipal);
+			ShowWindow(hAgenda, SW_SHOW);
+			SetTimer(hAgenda, TM_RELOJ, 1000, NULL);
+		}
+		if (LOWORD(wParam) == BTN_NUEVACITA && HIWORD(wParam) == BN_CLICKED) {
+			aux = origin;
+			DestroyWindow(hPagarCita);
+			hNuevaCita = CreateDialog(hInstGlobal, MAKEINTRESOURCE(IDD_NUEVACITA), NULL, nuevaCita);
+			ShowWindow(hNuevaCita, SW_SHOW);
+			SetTimer(hNuevaCita, TM_NC_RELOJ, 1000, NULL);
+		}
+		if (LOWORD(wParam) == BTN_EDITDOCINFO && HIWORD(wParam) == BN_CLICKED) {
+			aux = origin;
+			DestroyWindow(hPagarCita);
+			hEditarDoctor = CreateDialog(hInstGlobal, MAKEINTRESOURCE(IDD_EDITDOCTOR), NULL, editarInfoDoctor);
+			ShowWindow(hEditarDoctor, SW_SHOW);
+		}
+		if (LOWORD(wParam) == BTN_SALIR && HIWORD(wParam) == BN_CLICKED) {
+			if (MessageBox(hwnd, "¿Seguro que quiere salir del programa?", "SALIR", MB_YESNO) == IDYES) {
+				aux = origin;
+				salida = true;
+				DestroyWindow(hPagarCita);
+			}
+			break;
+		}
+		//OPCIONES DE PAGO DE CITA
 		if (LOWORD(wParam) == ID_PC_CANCELA && HIWORD(wParam) == BN_CLICKED) {
 			aux = origin;
 			DestroyWindow(hPagarCita);
@@ -1029,34 +884,6 @@ BOOL CALLBACK pagarCita(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 			ShowWindow(hAgenda, SW_SHOW);
 			SetTimer(hAgenda, TM_RELOJ, 1000, NULL);
 		}
-		if (LOWORD(wParam) == BTN_SALIR && HIWORD(wParam) == BN_CLICKED) {
-			if (MessageBox(hwnd, "¿Seguro que quiere salir del programa?", "SALIR", MB_YESNO) == IDYES) {
-				aux = origin;
-				salida = true;
-				DestroyWindow(hPagarCita);
-			}
-			break;
-		}
-		if (LOWORD(wParam) == BTN_AGENDA && HIWORD(wParam) == BN_CLICKED) {
-			aux = origin;
-			DestroyWindow(hPagarCita);
-			hAgenda = CreateDialog(hInstGlobal, MAKEINTRESOURCE(IDD_AGENDA), NULL, agendaVentanaPrincipal);
-			ShowWindow(hAgenda, SW_SHOW);
-			SetTimer(hAgenda, TM_RELOJ, 1000, NULL);
-		}
-		if (LOWORD(wParam) == BTN_NUEVACITA && HIWORD(wParam) == BN_CLICKED) {
-			aux = origin;
-			DestroyWindow(hPagarCita);
-			hNuevaCita = CreateDialog(hInstGlobal, MAKEINTRESOURCE(IDD_NUEVACITA), NULL, nuevaCita);
-			ShowWindow(hNuevaCita, SW_SHOW);
-			SetTimer(hNuevaCita, TM_NC_RELOJ, 1000, NULL);
-		}
-		if (LOWORD(wParam) == BTN_EDITDOCINFO && HIWORD(wParam) == BN_CLICKED) {
-			aux = origin;
-			DestroyWindow(hPagarCita);
-			hEditarDoctor = CreateDialog(hInstGlobal, MAKEINTRESOURCE(IDD_EDITDOCTOR), NULL, editarInfoDoctor);
-			ShowWindow(hEditarDoctor, SW_SHOW);
-		}
 		break;
 	case WM_DESTROY:
 		if (salida) {
@@ -1067,450 +894,96 @@ BOOL CALLBACK pagarCita(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 	return FALSE;
 }
 
-BOOL CALLBACK editarCita(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+BOOL CALLBACK editarInfoDoctor(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 	switch (msg) {
 	case WM_INITDIALOG: {
 		hBarraMenu = GetMenu(hwnd);
-		EnableMenuItem(hBarraMenu, BTN_NUEVACITA, MF_DISABLED);
-		EnableMenuItem(hBarraMenu, BTN_AGENDA, MF_DISABLED);
 		EnableMenuItem(hBarraMenu, BTN_EDITDOCINFO, MF_DISABLED);
+		EnableMenuItem(hBarraMenu, BTN_AGENDA, MF_ENABLED);
+		EnableMenuItem(hBarraMenu, BTN_NUEVACITA, MF_ENABLED);
 
-		HWND hCbEspecie = GetDlgItem(hwnd, CB_NC_ESPECIE);
-		SendMessage(hCbEspecie, CB_ADDSTRING, 0, (LPARAM)"Perro");
-		SendMessage(hCbEspecie, CB_ADDSTRING, 0, (LPARAM)"Gato");
-		SendMessage(hCbEspecie, CB_ADDSTRING, 0, (LPARAM)"Conejo");
-		SendMessage(hCbEspecie, CB_ADDSTRING, 0, (LPARAM)"Hámster");
-		SendMessage(hCbEspecie, CB_ADDSTRING, 0, (LPARAM)"Pájaro");
-		SendMessage(hCbEspecie, CB_ADDSTRING, 0, (LPARAM)"Loro");
-		SendMessage(hCbEspecie, CB_ADDSTRING, 0, (LPARAM)"Pez");
-		SendMessage(hCbEspecie, CB_ADDSTRING, 0, (LPARAM)"Tortuga");
-		SendMessage(hCbEspecie, CB_ADDSTRING, 0, (LPARAM)"Reptil o anfibio");
-
-		HWND hLblNombreMedicoNC = GetDlgItem(hwnd, ST_NC_DOCTOR);
-		HWND hLblCedulaNC = GetDlgItem(hwnd, ST_NC_CEDULA);
-		SetWindowText(hLblNombreMedicoNC, nombreMedico);
-		hPcFotoDoctor = GetDlgItem(hwnd, BMP_NC_DOCTOR);
-		hBmpDoctor = (HBITMAP)LoadImage(NULL, chDirFotoDoc, IMAGE_BITMAP, 75, 90, LR_LOADFROMFILE);
+		HWND hEdNombreMedico = GetDlgItem(hwnd, EDT_EDM_DOCTOR);
+		HWND hEdCedula = GetDlgItem(hwnd, EDT_EDM_CEDULA);
+		SetWindowText(hEdNombreMedico, nombreMedico);
+		SetWindowText(hEdCedula, cedula);
+		hPcFotoDoctor = GetDlgItem(hwnd, BMP_EDM_DOCTOR);
+		hBmpDoctor = (HBITMAP)LoadImage(NULL, chDirFotoDoc, IMAGE_BITMAP, 100, 120, LR_LOADFROMFILE);
 		SendMessage(hPcFotoDoctor, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hBmpDoctor);
-		SetWindowText(hLblCedulaNC, cedula);
-
-		hLblReloj = GetDlgItem(hwnd, ST_NC_RELOJ);
-
-		strcpy(chCambioFoto, aux->image[0].c_str());
-		hPcFotoMascota = GetDlgItem(hwnd, BMP_NC_MASCOTA);
-		hBmpMascota = (HBITMAP)LoadImage(NULL, chCambioFoto, IMAGE_BITMAP, 100, 120, LR_LOADFROMFILE);
-		SendMessage(hPcFotoMascota, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hBmpMascota);
-		indexImage = 0;
-		tempImg[0] = aux->image[0];
-		tempImg[1] = aux->image[1];
-
-		char buffer[80];
-		HWND hEdNombreD = GetDlgItem(hwnd, EDT_NC_DNOMBRE);
-		strcpy(buffer, aux->nombreDueño.c_str());
-		SetWindowText(hEdNombreD, buffer);
-
-		HWND hEdTelefono = GetDlgItem(hwnd, EDT_NC_TELEFONO);
-		strcpy(buffer, aux->telefono.c_str());
-		SetWindowText(hEdTelefono, buffer);
-
-		HWND hEdNombreM = GetDlgItem(hwnd, EDT_NC_MNOMBRE);
-		strcpy(buffer, aux->nombreMascota.c_str());
-		SetWindowText(hEdNombreM, buffer);
-
-		SendMessage(hCbEspecie, CB_SETCURSEL, aux->especieIndex, 0);
-
-		HWND hStFechaA = GetDlgItem(hwnd, ST_NC_FECHAACTUAL);
-		string fechaA = "Fecha de la cita: " + aux->fechaString + " a las " + aux->horaString;
-		strcpy(buffer, fechaA.c_str());
-		SetWindowText(hStFechaA, buffer);
-
-		HWND hEdMotivo = GetDlgItem(hwnd, EDT_NC_MOTIVO);
-		strcpy(buffer, aux->motivoConsulta.c_str());
-		SetWindowText(hEdMotivo, buffer);
-
-		HWND hEdCosto = GetDlgItem(hwnd, EDT_NC_COSTO);
-		snprintf(buffer, sizeof(buffer), "%.2f", aux->costo);
-		SetWindowText(hEdCosto, buffer);
-
-		if (aux->formaPago == 3) {
-			HWND hRdMeses = GetDlgItem(hwnd, RD_NC_3MESES);
-			SendMessage(hRdMeses, BM_SETCHECK, BST_CHECKED, 1);
-		}
-		else if (aux->formaPago == 6) {
-			HWND hRdMeses = GetDlgItem(hwnd, RD_NC_6MESES);
-			SendMessage(hRdMeses, BM_SETCHECK, BST_CHECKED, 1);
-		}
-		else if (aux->formaPago == 9) {
-			HWND hRdMeses = GetDlgItem(hwnd, RD_NC_9MESES);
-			SendMessage(hRdMeses, BM_SETCHECK, BST_CHECKED, 1);
-		}
-		else {
-			HWND hRdMeses = GetDlgItem(hwnd, RD_NC_CONTADO);
-			SendMessage(hRdMeses, BM_SETCHECK, BST_CHECKED, 1);
-		}
+		strcpy(chCambioFoto, chDirFotoDoc);
 	}break;
-	case WM_COMMAND:
-		if (LOWORD(wParam) == BTN_NC_CANCEL && HIWORD(wParam) == BN_CLICKED) {
-			aux->image[0] = tempImg[0];
-			aux->image[1] = tempImg[1];
-
-			aux = origin;
-			KillTimer(hwnd, TM_EDC_RELOJ);
-			DestroyWindow(hEditarCita);
+	case WM_COMMAND: {
+		//OPCIONES DE BARRA DE MENU
+		if (LOWORD(wParam) == BTN_AGENDA && HIWORD(wParam) == BN_CLICKED) {
+			strcpy(chDirFotoDoc, chCambioFoto);
+			DestroyWindow(hEditarDoctor);
 			hAgenda = CreateDialog(hInstGlobal, MAKEINTRESOURCE(IDD_AGENDA), NULL, agendaVentanaPrincipal);
 			ShowWindow(hAgenda, SW_SHOW);
 			SetTimer(hAgenda, TM_RELOJ, 1000, NULL);
 		}
-		if (LOWORD(wParam) == BTN_NC_NEXT && HIWORD(wParam) == BN_CLICKED) {
-			indexImage = 1;
-			HWND hBtnIndexImage = GetDlgItem(hwnd, BTN_NC_NEXT);
-			EnableWindow(hBtnIndexImage, false);
-			hBtnIndexImage = GetDlgItem(hwnd, BTN_NC_PREV);
-			EnableWindow(hBtnIndexImage, true);
-
-			strcpy(chCambioFoto, aux->image[1].c_str());
-			hPcFotoMascota = GetDlgItem(hwnd, BMP_NC_MASCOTA);
-			hBmpMascota = (HBITMAP)LoadImage(NULL, chCambioFoto, IMAGE_BITMAP, 95, 114, LR_LOADFROMFILE);
-			SendMessage(hPcFotoMascota, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hBmpMascota);
-			break;
-		}
-		if (LOWORD(wParam) == BTN_NC_PREV && HIWORD(wParam) == BN_CLICKED) {
-			indexImage = 0;
-			HWND hBtnIndexImage = GetDlgItem(hwnd, BTN_NC_PREV);
-			EnableWindow(hBtnIndexImage, false);
-			hBtnIndexImage = GetDlgItem(hwnd, BTN_NC_NEXT);
-			EnableWindow(hBtnIndexImage, true);
-
-			strcpy(chCambioFoto, aux->image[0].c_str());
-			hPcFotoMascota = GetDlgItem(hwnd, BMP_NC_MASCOTA);
-			hBmpMascota = (HBITMAP)LoadImage(NULL, chCambioFoto, IMAGE_BITMAP, 95, 114, LR_LOADFROMFILE);
-			SendMessage(hPcFotoMascota, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hBmpMascota);
-			break;
-		}
-		if (LOWORD(wParam) == BTN_NC_FOTOMASCOTA && HIWORD(wParam) == BN_CLICKED) {
-			OPENFILENAME ofnFotoMascota;
-			ZeroMemory(&ofnFotoMascota, sizeof(ofnFotoMascota));
-
-			ofnFotoMascota.hwndOwner = hwnd;
-			ofnFotoMascota.lStructSize = sizeof(ofnFotoMascota);
-			ofnFotoMascota.lpstrFile = chCambioFoto;
-			ofnFotoMascota.nMaxFile = MAX_PATH;
-			ofnFotoMascota.lpstrDefExt = "bmp";
-			ofnFotoMascota.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
-			ofnFotoMascota.lpstrFilter = "BMP Images\0*.bmp\0All Files\0*.*\0";
-			if (GetOpenFileName(&ofnFotoMascota)) {
-				hPcFotoMascota = GetDlgItem(hwnd, BMP_NC_MASCOTA);
-				hBmpMascota = (HBITMAP)LoadImage(NULL, chCambioFoto, IMAGE_BITMAP, 95, 114, LR_LOADFROMFILE);
-				SendMessage(hPcFotoMascota, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hBmpMascota);
-			}
-
-			string foto(chCambioFoto);
-			aux->image[indexImage] = foto;
-			break;
-		}
-		if (LOWORD(wParam) == IDOK && HIWORD(wParam) == BN_CLICKED) {
-			char buff[256];
-			char buffName[50];
-			int length;
-			HWND hEdNombreD = GetDlgItem(hwnd, EDT_NC_DNOMBRE);
-			length = GetWindowTextLength(hEdNombreD);
-			if (length > 0) {
-				GetWindowText(hEdNombreD, buff, length + 1);
-				string s(buff);
-				if (verificarNum(s)) {
-					MessageBox(hwnd, "El nombre de dueño no deben contener números.", "AVISO", MB_ICONEXCLAMATION);
-					break;
-				}
-				else {
-					aux->nombreDueño = s;
-				}
-			}
-			else {
-				MessageBox(hwnd, "Falta llenar el nombre del dueño.", "AVISO", MB_ICONEXCLAMATION);
-				break;
-			}
-
-			HWND hEdTel = GetDlgItem(hwnd, EDT_NC_TELEFONO);
-			length = GetWindowTextLength(hEdTel);
-			if (length > 0) {
-				if (length == 8 || length == 10 || length == 12) {
-					GetWindowText(hEdTel, buff, length + 1);
-					string s(buff);
-					aux->telefono = s;
-				}
-				else {
-					MessageBox(hwnd, "El teléfono debe ser de 8, 10 o 12 caracteres.", "AVISO", MB_ICONEXCLAMATION);
-					break;
-				}
-			}
-			else {
-				MessageBox(hwnd, "Falta llenar el teléfono.", "AVISO", MB_ICONEXCLAMATION);
-				break;
-			}
-
-			HWND hEdNombreM = GetDlgItem(hwnd, EDT_NC_MNOMBRE);
-			length = GetWindowTextLength(hEdNombreM);
-			if (length > 0) {
-				GetWindowText(hEdNombreM, buffName, length + 1);
-				string s(buffName);
-				if (verificarNum(s)) {
-					MessageBox(hwnd, "El nombre de la mascota no deben contener números.", "AVISO", MB_ICONEXCLAMATION);
-					break;
-				}
-				else {
-					aux->nombreMascota = s;
-				}
-			}
-			else {
-				MessageBox(hwnd, "Falta llenar el nombre de la mascota.", "AVISO", MB_ICONEXCLAMATION);
-				break;
-			}
-
-			HWND hCbEspecie = GetDlgItem(hwnd, CB_NC_ESPECIE);
-			int indice = SendMessage(hCbEspecie, CB_GETCURSEL, 0, 0);
-			if (indice == -1) {
-				MessageBox(hwnd, "Seleccione la especie de su mascota.", "AVISO", MB_ICONEXCLAMATION);
-				break;
-			}
-			else {
-				length = GetWindowTextLength(hCbEspecie);
-				GetWindowText(hCbEspecie, buff, length + 1);
-				string s(buff);
-				aux->especie = s;
-				aux->especieIndex = indice;
-			}
-
-			HWND hTpFecha = GetDlgItem(hwnd, IDC_DATETIMEPICKER1);
-			length = GetWindowTextLength(hTpFecha);
-			GetWindowText(hTpFecha, buff, length + 4);
-			string f(buff);
-			string Y = f.substr(6, 4);
-			string m = f.substr(3, 2);
-			string d = f.substr(0, 2);
-			HWND hTpHora = GetDlgItem(hwnd, IDC_DATETIMEPICKER2);
-			GetWindowText(hTpHora, buff, 15);
-			string h(buff);
-			string I = h.substr(0, 2);
-			string min = h.substr(3, 2);
-			string amPm = h.substr(9, 1);
-			string stdHour;
-			//VALIDCIÓN DE FECHA NO ANTIGUA
-			int yearComp = stoi(Y);
-			int monthComp = stoi(m);
-			int dayComp = stoi(d);
-			int hourComp = stoi(I);
-			int minuteComp = stoi(min);
-			if (yearComp >= tiempoActual->tm_year + 1900) {
-				if (yearComp == tiempoActual->tm_year + 1900) {
-					if (monthComp >= tiempoActual->tm_mon + 1) {
-						if (monthComp == tiempoActual->tm_mon + 1) {
-							if (dayComp >= tiempoActual->tm_mday) {
-								if (dayComp == tiempoActual->tm_mday) {
-									if (amPm == "p") {
-										if (hourComp != 12) {
-											hourComp += 12;
-										}
-									}
-									if (amPm == "a" && hourComp == 12) {
-										hourComp -= 12;
-									}
-									if (hourComp >= tiempoActual->tm_hour) {
-										if (hourComp == tiempoActual->tm_hour) {
-											if (minuteComp > tiempoActual->tm_min) {
-												aux->year = yearComp;
-												aux->month = monthComp;
-												aux->day = dayComp;
-												aux->hour = hourComp;
-												aux->minutes = minuteComp;
-												aux->fechaString = "";
-												aux->horaString = "";
-											}
-											else {
-												MessageBox(hwnd, "La hora no debe ser igual o pasada al tiempo actual.", "AVISO", MB_ICONEXCLAMATION);
-												break;
-											}
-										}
-										else {
-											aux->year = yearComp;
-											aux->month = monthComp;
-											aux->day = dayComp;
-											aux->hour = hourComp;
-											aux->minutes = minuteComp;
-											aux->fechaString = "";
-											aux->horaString = "";
-										}
-									}
-									else {
-										MessageBox(hwnd, "La hora no debe ser igual o pasada al tiempo actual.", "AVISO", MB_ICONEXCLAMATION);
-										break;
-									}
-								}
-								else {
-									if (amPm == "p") {
-										if (hourComp != 12) {
-											hourComp += 12;
-										}
-									}
-									if (amPm == "a" && hourComp == 12) {
-										hourComp -= 12;
-									}
-									aux->year = yearComp;
-									aux->month = monthComp;
-									aux->day = dayComp;
-									aux->hour = hourComp;
-									aux->minutes = minuteComp;
-									aux->fechaString = "";
-									aux->horaString = "";
-								}
-							}
-							else {
-								MessageBox(hwnd, "Coloque fecha válida, el día debe ser actual o próximo.", "AVISO", MB_ICONEXCLAMATION);
-								break;
-							}
-						}
-						else {
-							if (amPm == "p") {
-								if (hourComp != 12) {
-									hourComp += 12;
-								}
-							}
-							if (amPm == "a" && hourComp == 12) {
-								hourComp -= 12;
-							}
-							aux->year = yearComp;
-							aux->month = monthComp;
-							aux->day = dayComp;
-							aux->hour = hourComp;
-							aux->minutes = minuteComp;
-							aux->fechaString = "";
-							aux->horaString = "";
-						}
-					}
-					else {
-						MessageBox(hwnd, "Coloque fecha válida, el mes debe ser actual o próximo.", "AVISO", MB_ICONEXCLAMATION);
-						break;
-					}
-				}
-				else {
-					if (amPm == "p") {
-						if (hourComp != 12) {
-							hourComp += 12;
-						}
-					}
-					if (amPm == "a" && hourComp == 12) {
-						hourComp -= 12;
-					}
-					aux->year = yearComp;
-					aux->month = monthComp;
-					aux->day = dayComp;
-					aux->hour = hourComp;
-					aux->minutes = minuteComp;
-					aux->fechaString = "";
-					aux->horaString = "";
-				}
-			}
-			else {
-				MessageBox(hwnd, "Coloque fecha válida, el año debe ser actual o próximo.", "AVISO", MB_ICONEXCLAMATION);
-				break;
-			}
-			//VALIDACIÓN DE FECHA NO REPETIDA
-			if (amPm == "p") {
-				stdHour = I + ":" + min + " P.M.";
-			}
-			else {
-				stdHour = I + ":" + min + " A.M.";
-			}
-			CITA *auxCF = origin;
-			bool fechaRepetida = false;
-			while (auxCF != NULL) {
-				if (f.compare(auxCF->fechaString) == 0) {
-					if (stdHour.compare(auxCF->horaString) == 0) {
-						fechaRepetida = true;
-						break;
-					}
-				}
-				auxCF = auxCF->next;
-			}
-			if (fechaRepetida) {
-				MessageBox(hwnd, "La fecha y hora de la cita ya no está disponible. Ya existe otra cita en este horario.", "AVISO", MB_ICONEXCLAMATION);
-				break;
-			}
-			else {
-				aux->fechaString = f;
-				aux->horaString = stdHour;
-			}
-
-			HWND hEdMotivo = GetDlgItem(hwnd, EDT_NC_MOTIVO);
-			length = GetWindowTextLength(hEdMotivo);
-			if (length > 0) {
-				GetWindowText(hEdMotivo, buff, length + 1);
-				string m(buff);
-				aux->motivoConsulta = m;
-			}
-			else {
-				MessageBox(hwnd, "Especifique el motivo de la consulta.", "AVISO", MB_ICONEXCLAMATION);
-				break;
-			}
-
-			HWND hEdCosto = GetDlgItem(hwnd, EDT_NC_COSTO);
-			length = GetWindowTextLength(hEdCosto);
-			if (length > 0) {
-				GetWindowText(hEdCosto, buff, length + 1);
-				string s(buff);
-				if (verificarAlfa(s)) {
-					MessageBox(hwnd, "El costo no debe contener letras o más de un punto decimal. Corrija.", "AVISO", MB_ICONEXCLAMATION);
-					break;
-				}
-				else {
-					aux->costo = stof(s);
-				}
-			}
-			else {
-				MessageBox(hwnd, "Agregue el costo de la consulta.", "Aviso", MB_ICONEXCLAMATION);
-				break;
-			}
-
-			if (IsDlgButtonChecked(hwnd, RD_NC_CONTADO) == BST_CHECKED) {
-				aux->formaPago = 1;
-			}
-			else if (IsDlgButtonChecked(hwnd, RD_NC_3MESES) == BST_CHECKED) {
-				aux->formaPago = 3;
-			}
-			else if (IsDlgButtonChecked(hwnd, RD_NC_6MESES) == BST_CHECKED) {
-				aux->formaPago = 6;
-			}
-			else if (IsDlgButtonChecked(hwnd, RD_NC_9MESES) == BST_CHECKED) {
-				aux->formaPago = 9;
-			}
-			else {
-				MessageBox(hwnd, "Seleccione una forma de pago.", "AVISO", MB_ICONEXCLAMATION);
-				break;
-			}
-			MessageBox(hwnd, "Cita Modificada.", "DATOS CORRECTOS", MB_OK);
-
-			aux = origin;
-
-			KillTimer(hEditarCita, TM_EDC_RELOJ);
-			DestroyWindow(hEditarCita);
-			hAgenda = CreateDialog(hInstGlobal, MAKEINTRESOURCE(IDD_AGENDA), NULL, agendaVentanaPrincipal);
-			ShowWindow(hAgenda, SW_SHOW);
-			SetTimer(hAgenda, TM_RELOJ, 1000, NULL);
+		if (LOWORD(wParam) == BTN_NUEVACITA && HIWORD(wParam) == BN_CLICKED) {
+			strcpy(chDirFotoDoc, chCambioFoto);
+			DestroyWindow(hEditarDoctor);
+			hNuevaCita = CreateDialog(hInstGlobal, MAKEINTRESOURCE(IDD_NUEVACITA), NULL, nuevaCita);
+			ShowWindow(hNuevaCita, SW_SHOW);
+			SetTimer(hNuevaCita, TM_NC_RELOJ, 1000, NULL);
 		}
 		if (LOWORD(wParam) == BTN_SALIR && HIWORD(wParam) == BN_CLICKED) {
+			strcpy(chDirFotoDoc, chCambioFoto);
 			if (MessageBox(hwnd, "¿Seguro que quiere salir del programa?", "SALIR", MB_YESNO) == IDYES) {
 				salida = true;
-				KillTimer(hwnd, TM_EDC_RELOJ);
-				DestroyWindow(hEditarCita);
+				DestroyWindow(hEditarDoctor);
 			}
 			break;
 		}
-		break;
-	case WM_TIMER: {
-		time(&allTime);
-		tiempoActual = localtime(&allTime);
-		char reloj[80];
-		strftime(reloj, 80, "Hoy es: %d/%m/%Y  %I:%M:%S", tiempoActual);
-		SetWindowText(hLblReloj, reloj);
+		//OPCIONES DE EDICIÓN DE PERFIL DEL DOCTOR
+		if (LOWORD(wParam) == ID_EDM_CANCELA && HIWORD(wParam) == BN_CLICKED) {
+			strcpy(chDirFotoDoc, chCambioFoto);
+			DestroyWindow(hEditarDoctor);
+			hAgenda = CreateDialog(hInstGlobal, MAKEINTRESOURCE(IDD_AGENDA), NULL, agendaVentanaPrincipal);
+			ShowWindow(hAgenda, SW_SHOW);
+			SetTimer(hAgenda, TM_RELOJ, 1000, NULL);
+			break;
+		}
+		if (LOWORD(wParam) == BTN_EDM_DOCTOR && HIWORD(wParam) == BN_CLICKED) {
+			fotoDoctor(hwnd);
+			break;
+		}
+		if (LOWORD(wParam) == BTN_EDM_BORRARFOTO && HIWORD(wParam) == BN_CLICKED) {
+			strcpy(chCambioFoto, chDirFotoDoc);
+			borrarFotoDoctor(hwnd);
+			break;
+		}
+		if (LOWORD(wParam = ID_EDM_OK && HIWORD(wParam) == BN_CLICKED)) {
+			HWND hEdNombreMedico = GetDlgItem(hwnd, EDT_EDM_DOCTOR);
+			int length = GetWindowTextLength(hEdNombreMedico);
+			if (length > 0) {
+				GetWindowText(hEdNombreMedico, nombreMedico, length + 1);
+				string m(nombreMedico);
+				if (verificarNum(m)) {
+					MessageBox(hwnd, "El nombre del médico no debe contener números.", "AVISO", MB_ICONEXCLAMATION);
+					break;
+				}
+			}
+			else {
+				MessageBox(hwnd, "Llene el nombre del médico.", "AVISO", MB_ICONEXCLAMATION);
+				break;
+			}
+
+			HWND hEdCedula = GetDlgItem(hwnd, EDT_EDM_CEDULA);
+			length = GetWindowTextLength(hEdCedula);
+			if (length > 0) {
+				GetWindowText(hEdCedula, cedula, length + 1);
+			}
+			else {
+				MessageBox(hwnd, "Llene la cédula.", "AVISO", MB_ICONEXCLAMATION);
+				break;
+			}
+
+			DestroyWindow(hEditarDoctor);
+			hAgenda = CreateDialog(hInstGlobal, MAKEINTRESOURCE(IDD_AGENDA), NULL, agendaVentanaPrincipal);
+			ShowWindow(hAgenda, SW_SHOW);
+			SetTimer(hAgenda, TM_RELOJ, 1000, NULL);
+		}
 	}break;
 	case WM_DESTROY:
 		if (salida) {
@@ -1527,6 +1000,12 @@ BOOL CALLBACK primerDoctor(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 		MessageBox(hwnd, "Hola, doctor. Ingrese sus datos para empezar su agenda.", "BIENVENIDO", MB_ICONINFORMATION);
 		break;
 	case WM_COMMAND:
+		if (LOWORD(wParam) == BTN_EDM_DOCTOR && HIWORD(wParam) == BN_CLICKED) {
+			fotoDoctor(hwnd);
+		}
+		if (LOWORD(wParam) == BTN_EDM_BORRARFOTO && HIWORD(wParam) == BN_CLICKED) {
+			borrarFotoDoctor(hwnd);
+		}
 		if (LOWORD(wParam) == IDOK && HIWORD(wParam) == BN_CLICKED) {
 			HWND hEdNombreMedico = GetDlgItem(hwnd, EDT_EDM_DOCTOR);
 			int length = GetWindowTextLength(hEdNombreMedico);
@@ -1558,23 +1037,6 @@ BOOL CALLBACK primerDoctor(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
 			EndDialog(hwnd, 0);
 		}
-		if (LOWORD(wParam) == BTN_EDM_DOCTOR && HIWORD(wParam) == BN_CLICKED) {
-			OPENFILENAME ofnFotoDoctor;
-			ZeroMemory(&ofnFotoDoctor, sizeof(ofnFotoDoctor));
-
-			ofnFotoDoctor.hwndOwner = hwnd;
-			ofnFotoDoctor.lStructSize = sizeof(ofnFotoDoctor);
-			ofnFotoDoctor.lpstrFile = chDirFotoDoc;
-			ofnFotoDoctor.nMaxFile = MAX_PATH;
-			ofnFotoDoctor.lpstrDefExt = "bmp";
-			ofnFotoDoctor.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
-			ofnFotoDoctor.lpstrFilter = "BMP Images\0*.bmp\0All Files\0*.*\0";
-			if (GetOpenFileName(&ofnFotoDoctor)) {
-				hPcFotoDoctor = GetDlgItem(hwnd, BMP_EDM_DOCTOR);
-				hBmpDoctor = (HBITMAP)LoadImage(NULL, chDirFotoDoc, IMAGE_BITMAP, 100, 120, LR_LOADFROMFILE);
-				SendMessage(hPcFotoDoctor, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hBmpDoctor);
-			}
-		}
 		break;
 	}
 	return FALSE;
@@ -1599,18 +1061,294 @@ bool verificarAlfa(string c) {
 	int n = c.size();
 	int dots = 0;
 	for (int i = 0; i < n; i++) {
-		if (c[i] < 47 && c[i] > 58) {
+		if (c[i] != 46 && c[i] < 47 || c[i] > 58) {
 			r = true;
-			break;
+			return r;
 		}
 		if (c[i] == 46) {
 			dots++;
 			if (dots == 2) {
 				r = true;
-				break;
+				return r;
 			}
 		}
 	}
+	return r;
+}
+
+bool introducirDatos(HWND hwnd) {
+	bool r = false;
+	char buff[256];
+	int length;
+
+	HWND hEdNombreM = GetDlgItem(hwnd, EDT_NC_MNOMBRE);
+	length = GetWindowTextLength(hEdNombreM);
+	if (length > 0) {
+		GetWindowText(hEdNombreM, buff, length + 1);
+		string s(buff);
+		if (verificarNum(s)) {
+			MessageBox(hwnd, "El nombre de la mascota no deben contener números.", "AVISO", MB_ICONEXCLAMATION);
+			return r;
+		}
+		else {
+			aux->nombreMascota = s;
+		}
+	}
+	else {
+		MessageBox(hwnd, "Falta llenar el nombre de la mascota.", "AVISO", MB_ICONEXCLAMATION);
+		return r;
+	}
+
+	HWND hCbEspecie = GetDlgItem(hwnd, CB_NC_ESPECIE);
+	int indice = SendMessage(hCbEspecie, CB_GETCURSEL, 0, 0);
+	if (indice == -1) {
+		MessageBox(hwnd, "Seleccione la especie de su mascota.", "AVISO", MB_ICONEXCLAMATION);
+		return r;
+	}
+	else {
+		length = GetWindowTextLength(hCbEspecie);
+		GetWindowText(hCbEspecie, buff, length + 1);
+		string s(buff);
+		aux->especie = s;
+		aux->especieIndex = indice;
+	}
+
+	HWND hEdNombreD = GetDlgItem(hwnd, EDT_NC_DNOMBRE);
+	length = GetWindowTextLength(hEdNombreD);
+	if (length > 0) {
+		GetWindowText(hEdNombreD, buff, length + 1);
+		string s(buff);
+		if (verificarNum(s)) {
+			MessageBox(hwnd, "El nombre de dueño no deben contener números.", "AVISO", MB_ICONEXCLAMATION);
+			return r;
+		}
+		else {
+			aux->nombreDueño = s;
+		}
+	}
+	else {
+		MessageBox(hwnd, "Falta llenar el nombre del dueño.", "AVISO", MB_ICONEXCLAMATION);
+		return r;
+	}
+
+	HWND hEdTel = GetDlgItem(hwnd, EDT_NC_TELEFONO);
+	length = GetWindowTextLength(hEdTel);
+	if (length > 0) {
+		if (length == 8 || length == 10 || length == 12) {
+			GetWindowText(hEdTel, buff, length + 1);
+			string s(buff);
+			aux->telefono = s;
+		}
+		else {
+			MessageBox(hwnd, "El teléfono debe ser de 8, 10 o 12 caracteres.", "AVISO", MB_ICONEXCLAMATION);
+			return r;
+		}
+	}
+	else {
+		MessageBox(hwnd, "Falta llenar el teléfono.", "AVISO", MB_ICONEXCLAMATION);
+		return r;
+	}
+
+	HWND hTpFecha = GetDlgItem(hwnd, IDC_DATETIMEPICKER1);
+	length = GetWindowTextLength(hTpFecha);
+	GetWindowText(hTpFecha, buff, length + 4);
+	string f(buff);
+	string Y = f.substr(6, 4);
+	string m = f.substr(3, 2);
+	string d = f.substr(0, 2);
+	HWND hTpHora = GetDlgItem(hwnd, IDC_DATETIMEPICKER2);
+	GetWindowText(hTpHora, buff, 15);
+	string h(buff);
+	string I = h.substr(0, 2);
+	string min = h.substr(3, 2);
+	string amPm = h.substr(9, 1);
+	string stdHour;
+	//VALIDCIÓN DE FECHA NO ANTIGUA
+	int yearComp = stoi(Y);
+	int monthComp = stoi(m);
+	int dayComp = stoi(d);
+	int hourComp = stoi(I);
+	int minuteComp = stoi(min);
+	if (yearComp >= tiempoActual->tm_year + 1900) {
+		if (yearComp == tiempoActual->tm_year + 1900) {
+			if (monthComp >= tiempoActual->tm_mon + 1) {
+				if (monthComp == tiempoActual->tm_mon + 1) {
+					if (dayComp >= tiempoActual->tm_mday) {
+						if (dayComp == tiempoActual->tm_mday) {
+							if (amPm == "p") {
+								if (hourComp != 12) {
+									hourComp += 12;
+								}
+							}
+							if (amPm == "a" && hourComp == 12) {
+								hourComp -= 12;
+							}
+							if (hourComp >= tiempoActual->tm_hour) {
+								if (hourComp == tiempoActual->tm_hour) {
+									if (minuteComp > tiempoActual->tm_min) {
+										aux->year = yearComp;
+										aux->month = monthComp;
+										aux->day = dayComp;
+										aux->hour = hourComp;
+										aux->minutes = minuteComp;
+									}
+									else {
+										MessageBox(hwnd, "La hora no debe ser igual o pasada al tiempo actual.", "AVISO", MB_ICONEXCLAMATION);
+										return r;
+									}
+								}
+								else {
+									aux->year = yearComp;
+									aux->month = monthComp;
+									aux->day = dayComp;
+									aux->hour = hourComp;
+									aux->minutes = minuteComp;
+								}
+							}
+							else {
+								MessageBox(hwnd, "La hora no debe ser igual o pasada al tiempo actual.", "AVISO", MB_ICONEXCLAMATION);
+								return r;
+							}
+						}
+						else {
+							if (amPm == "p") {
+								if (hourComp != 12) {
+									hourComp += 12;
+								}
+							}
+							if (amPm == "a" && hourComp == 12) {
+								hourComp -= 12;
+							}
+							aux->year = yearComp;
+							aux->month = monthComp;
+							aux->day = dayComp;
+							aux->hour = hourComp;
+							aux->minutes = minuteComp;
+						}
+					}
+					else {
+						MessageBox(hwnd, "Coloque fecha válida, el día debe ser actual o próximo.", "AVISO", MB_ICONEXCLAMATION);
+						return r;
+					}
+				}
+				else {
+					if (amPm == "p") {
+						if (hourComp != 12) {
+							hourComp += 12;
+						}
+					}
+					if (amPm == "a" && hourComp == 12) {
+						hourComp -= 12;
+					}
+					aux->year = yearComp;
+					aux->month = monthComp;
+					aux->day = dayComp;
+					aux->hour = hourComp;
+					aux->minutes = minuteComp;
+				}
+			}
+			else {
+				MessageBox(hwnd, "Coloque fecha válida, el mes debe ser actual o próximo.", "AVISO", MB_ICONEXCLAMATION);
+				return r;
+			}
+		}
+		else {
+			if (amPm == "p") {
+				if (hourComp != 12) {
+					hourComp += 12;
+				}
+			}
+			if (amPm == "a" && hourComp == 12) {
+				hourComp -= 12;
+			}
+			aux->year = yearComp;
+			aux->month = monthComp;
+			aux->day = dayComp;
+			aux->hour = hourComp;
+			aux->minutes = minuteComp;
+		}
+	}
+	else {
+		MessageBox(hwnd, "Coloque fecha válida, el año debe ser actual o próximo.", "AVISO", MB_ICONEXCLAMATION);
+		return r;
+	}
+	//VALIDACIÓN DE FECHA NO REPETIDA
+	aux->fechaString = "";
+	aux->horaString = "";
+	if (amPm == "p") {
+		stdHour = I + ":" + min + " P.M.";
+	}
+	else {
+		stdHour = I + ":" + min + " A.M.";
+	}
+	CITA *auxCF = origin;
+	bool fechaRepetida = false;
+	while (auxCF != NULL) {
+		if (f.compare(auxCF->fechaString) == 0) {
+			if (stdHour.compare(auxCF->horaString) == 0) {
+				fechaRepetida = true;
+				break;
+			}
+		}
+		auxCF = auxCF->next;
+	}
+	if (fechaRepetida) {
+		MessageBox(hwnd, "La fecha y hora de la cita ya no está disponible. Ya existe otra cita en este horario.", "AVISO", MB_ICONEXCLAMATION);
+		return r;
+	}
+	else {
+		aux->fechaString = f;
+		aux->horaString = stdHour;
+	}
+
+	HWND hEdMotivo = GetDlgItem(hwnd, EDT_NC_MOTIVO);
+	length = GetWindowTextLength(hEdMotivo);
+	if (length > 0) {
+		GetWindowText(hEdMotivo, buff, length + 1);
+		string m(buff);
+		aux->motivoConsulta = m;
+	}
+	else {
+		MessageBox(hwnd, "Especifique el motivo de la consulta.", "AVISO", MB_ICONEXCLAMATION);
+		return r;
+	}
+
+	HWND hEdCosto = GetDlgItem(hwnd, EDT_NC_COSTO);
+	length = GetWindowTextLength(hEdCosto);
+	if (length > 0) {
+		GetWindowText(hEdCosto, buff, length + 1);
+		string s(buff);
+		if (verificarAlfa(s)) {
+			MessageBox(hwnd, "El costo no debe contener letras o más de un punto decimal. Corrija.", "AVISO", MB_ICONEXCLAMATION);
+			return r;
+		}
+		else {
+			aux->costo = atof(buff);
+		}
+	}
+	else {
+		MessageBox(hwnd, "Agregue el costo de la consulta.", "AVISO", MB_ICONEXCLAMATION);
+		return r;
+	}
+
+	if (IsDlgButtonChecked(hwnd, RD_NC_CONTADO) == BST_CHECKED) {
+		aux->formaPago = 1;
+	}
+	else if (IsDlgButtonChecked(hwnd, RD_NC_3MESES) == BST_CHECKED) {
+		aux->formaPago = 3;
+	}
+	else if (IsDlgButtonChecked(hwnd, RD_NC_6MESES) == BST_CHECKED) {
+		aux->formaPago = 6;
+	}
+	else if (IsDlgButtonChecked(hwnd, RD_NC_9MESES) == BST_CHECKED) {
+		aux->formaPago = 9;
+	}
+	else {
+		MessageBox(hwnd, "Seleccione una forma de pago.", "AVISO", MB_ICONEXCLAMATION);
+		return r;
+	}
+
+	r = true;
 	return r;
 }
 
@@ -1912,5 +1650,40 @@ void impresion() {
 		aux = aux->next;
 	}
 	aux = origin;
+}
+
+void fotoDoctor(HWND hwnd) {
+	strcpy(chCambioFoto, chDirFotoDoc);
+	OPENFILENAME ofnFotoDoctor;
+	ZeroMemory(&ofnFotoDoctor, sizeof(ofnFotoDoctor));
+
+	ofnFotoDoctor.hwndOwner = hwnd;
+	ofnFotoDoctor.lStructSize = sizeof(ofnFotoDoctor);
+	ofnFotoDoctor.lpstrFile = chDirFotoDoc;
+	ofnFotoDoctor.nMaxFile = MAX_PATH;
+	ofnFotoDoctor.lpstrDefExt = "bmp";
+	ofnFotoDoctor.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
+	ofnFotoDoctor.lpstrFilter = "BMP Images\0*.bmp\0All Files\0*.*\0";
+	if (GetOpenFileName(&ofnFotoDoctor)) {
+		hPcFotoDoctor = GetDlgItem(hwnd, BMP_EDM_DOCTOR);
+		hBmpDoctor = (HBITMAP)LoadImage(NULL, chDirFotoDoc, IMAGE_BITMAP, 100, 120, LR_LOADFROMFILE);
+		SendMessage(hPcFotoDoctor, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hBmpDoctor);
+	}
+}
+
+void borrarFotoMascota(HWND hwnd) {
+	aux->image[indexImage] = "";
+	strcpy(chCambioFoto, "");
+	hPcFotoMascota = GetDlgItem(hwnd, BMP_NC_MASCOTA);
+	hBmpMascota = (HBITMAP)LoadImage(NULL, chCambioFoto, IMAGE_BITMAP, 95, 114, LR_LOADFROMFILE);
+	SendMessage(hPcFotoMascota, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hBmpMascota);
+}
+
+void borrarFotoDoctor(HWND hwnd) {
+	strcpy(chCambioFoto, chDirFotoDoc);
+	strcpy(chDirFotoDoc, "");
+	hPcFotoDoctor = GetDlgItem(hwnd, BMP_EDM_DOCTOR);
+	hBmpDoctor = (HBITMAP)LoadImage(NULL, chDirFotoDoc, IMAGE_BITMAP, 100, 120, LR_LOADFROMFILE);
+	SendMessage(hPcFotoDoctor, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hBmpDoctor);
 }
 #pragma endregion

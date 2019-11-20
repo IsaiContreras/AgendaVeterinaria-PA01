@@ -7,6 +7,7 @@
 #define IDD_NUEVACITA                   105
 #define IDD_PAGOCITA                    107
 #define IDD_PRIMERDOCTOR                111
+#define IDD_NUEVACITA1                  112
 #define IDD_EDITARCITA                  112
 #define IDR_MENU1                       123
 #define BMP_MENU_DOCTOR                 1002

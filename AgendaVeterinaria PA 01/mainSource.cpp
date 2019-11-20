@@ -646,15 +646,6 @@ BOOL CALLBACK editarCita(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 		}
 	}break;
 	case WM_COMMAND:
-		//OPCIONES BARRA MENU
-		if (LOWORD(wParam) == BTN_SALIR && HIWORD(wParam) == BN_CLICKED) {
-			if (MessageBox(hwnd, "¿Seguro que quiere salir del programa?", "SALIR", MB_YESNO) == IDYES) {
-				salida = true;
-				KillTimer(hwnd, TM_EDC_RELOJ);
-				DestroyWindow(hEditarCita);
-			}
-			break;
-		}
 		//OPCIONES DE EDICIÓN DE CITA
 		if (LOWORD(wParam) == BTN_NC_NEXT && HIWORD(wParam) == BN_CLICKED) {
 			indexImage = 1;
@@ -751,9 +742,9 @@ BOOL CALLBACK pagarCita(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 	switch (msg) {
 	case WM_INITDIALOG: {
 		hBarraMenu = GetMenu(hwnd);
-		EnableMenuItem(hBarraMenu, BTN_AGENDA, MF_ENABLED);
-		EnableMenuItem(hBarraMenu, BTN_NUEVACITA, MF_ENABLED);
-		EnableMenuItem(hBarraMenu, BTN_EDITDOCINFO, MF_ENABLED);
+		EnableMenuItem(hBarraMenu, BTN_AGENDA, MF_DISABLED);
+		EnableMenuItem(hBarraMenu, BTN_NUEVACITA, MF_DISABLED);
+		EnableMenuItem(hBarraMenu, BTN_EDITDOCINFO, MF_DISABLED);
 		EnableMenuItem(hBarraMenu, BTN_SALIR, MF_DISABLED);
 
 		HWND hLblNombreMedicoPC = GetDlgItem(hwnd, ST_PC_DOCTOR);
@@ -844,35 +835,6 @@ BOOL CALLBACK pagarCita(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 		}
 	}break;
 	case WM_COMMAND:
-		//OPCIONES BARRA DE MENU
-		if (LOWORD(wParam) == BTN_AGENDA && HIWORD(wParam) == BN_CLICKED) {
-			aux = origin;
-			DestroyWindow(hPagarCita);
-			hAgenda = CreateDialog(hInstGlobal, MAKEINTRESOURCE(IDD_AGENDA), NULL, agendaVentanaPrincipal);
-			ShowWindow(hAgenda, SW_SHOW);
-			SetTimer(hAgenda, TM_RELOJ, 1000, NULL);
-		}
-		if (LOWORD(wParam) == BTN_NUEVACITA && HIWORD(wParam) == BN_CLICKED) {
-			aux = origin;
-			DestroyWindow(hPagarCita);
-			hNuevaCita = CreateDialog(hInstGlobal, MAKEINTRESOURCE(IDD_NUEVACITA), NULL, nuevaCita);
-			ShowWindow(hNuevaCita, SW_SHOW);
-			SetTimer(hNuevaCita, TM_NC_RELOJ, 1000, NULL);
-		}
-		if (LOWORD(wParam) == BTN_EDITDOCINFO && HIWORD(wParam) == BN_CLICKED) {
-			aux = origin;
-			DestroyWindow(hPagarCita);
-			hEditarDoctor = CreateDialog(hInstGlobal, MAKEINTRESOURCE(IDD_EDITDOCTOR), NULL, editarInfoDoctor);
-			ShowWindow(hEditarDoctor, SW_SHOW);
-		}
-		if (LOWORD(wParam) == BTN_SALIR && HIWORD(wParam) == BN_CLICKED) {
-			if (MessageBox(hwnd, "¿Seguro que quiere salir del programa?", "SALIR", MB_YESNO) == IDYES) {
-				aux = origin;
-				salida = true;
-				DestroyWindow(hPagarCita);
-			}
-			break;
-		}
 		//OPCIONES DE PAGO DE CITA
 		if (LOWORD(wParam) == ID_PC_CANCELA && HIWORD(wParam) == BN_CLICKED) {
 			aux = origin;

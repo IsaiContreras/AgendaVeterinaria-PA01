@@ -72,6 +72,7 @@ bool introducirDatos(HWND);
 void ordenamiento();
 void intercambio(CITA *auxActual, CITA *auxProx);
 void impresion();
+void limpiarMostrador(HWND);
 void fotoDoctor(HWND);
 void borrarFotoMascota(HWND);
 void borrarFotoDoctor(HWND);
@@ -113,6 +114,7 @@ BOOL CALLBACK agendaVentanaPrincipal(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
 		EnableMenuItem(hBarraMenu, BTN_AGENDA, MF_DISABLED);
 		EnableMenuItem(hBarraMenu, BTN_NUEVACITA, MF_ENABLED);
 		EnableMenuItem(hBarraMenu, BTN_EDITDOCINFO, MF_ENABLED);
+		EnableMenuItem(hBarraMenu, BTN_SALIR, MF_ENABLED);
 
 		SendMessage(hLbAgenda, LB_RESETCONTENT, 0, 0);
 
@@ -270,68 +272,78 @@ BOOL CALLBACK agendaVentanaPrincipal(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
 			hPagarCita = CreateDialog(hInstGlobal, MAKEINTRESOURCE(IDD_PAGOCITA), NULL, pagarCita);
 			ShowWindow(hPagarCita, SW_SHOW);
 		}
+		if (LOWORD(wParam) == BTN_FILTER && HIWORD(wParam) == BN_CLICKED) {
+			int length;
+			char buff[30];
+			SendMessage(hLbAgenda, LB_RESETCONTENT, 0, 0);
+
+			HWND hTpFiltro = GetDlgItem(hwnd, IDC_DATETIMEPICKER1);
+			length = GetWindowTextLength(hTpFiltro);
+			GetWindowText(hTpFiltro, buff, length + 4);
+			string filter(buff);
+
+			ordenamiento();
+			aux = origin;
+			while (aux != NULL) {
+				if (aux->fechaString.compare(filter) == 0) {
+					string display = aux->nombreMascota + "  |  " + aux->fechaString + "  |  " + aux->horaString;
+					char buffL[100];
+					strcpy(buffL, display.c_str());
+					SendMessage(hLbAgenda, LB_ADDSTRING, 0, (LPARAM)buffL);
+				}
+
+				aux = aux->next;
+			}
+			aux = origin;
+		}
+		if (LOWORD(wParam) == BTN_RESTAURARLISTA && HIWORD(wParam) == BN_CLICKED) {
+			SendMessage(hLbAgenda, LB_RESETCONTENT, 0, 0);
+			ordenamiento();
+			impresion();
+		}
 		if (LOWORD(wParam) == BTN_ELIMINARCITA && HIWORD(wParam) == BN_CLICKED) {
 			if (MessageBox(hwnd, "¿Seguro que desea eliminar esta cita?", "Eliminar Cita", MB_OKCANCEL) == IDOK) {
-				SendMessage(hLbAgenda, LB_RESETCONTENT, 0, 0);
-			    if (aux->next == NULL && aux->prev == NULL) {
-				delete aux;
-				aux = origin = NULL;
-			    }
-				else if (aux->prev == NULL) {
-					origin = origin->next;
-					aux->next->prev = NULL;
-					delete aux;
-					aux = origin;
+					SendMessage(hLbAgenda, LB_RESETCONTENT, 0, 0);
+					if (aux->next == NULL && aux->prev == NULL) {
+						delete aux;
+						aux = origin = NULL;
+					}
+					else if (aux->prev == NULL) {
+						origin = origin->next;
+						aux->next->prev = NULL;
+						delete aux;
+						aux = origin;
+					}
+					else if (aux->next == NULL) {
+						aux->prev->next = NULL;
+						delete aux;
+						aux = origin;
+					}
+					else {
+						aux->prev->next = aux->next;
+						aux->next->prev = aux->prev;
+						delete aux;
+						aux = origin;
+					}
+
+					ordenamiento();
+					impresion();
+
+					limpiarMostrador(hwnd);
 				}
-				else if (aux->next == NULL) {
-					aux->prev->next = NULL;
-					delete aux;
+		}
+		if (LOWORD(wParam) == BTN_BORRARLISTA && HIWORD(wParam) == BN_CLICKED) {
+			if (origin != NULL) {
+				if (MessageBox(hwnd, "¿Seguro que desea borrar toda la lista? Los datos se perderán completamente.", "BORRAR LISTA", MB_YESNO) == IDYES) {
 					aux = origin;
+					while (aux != NULL) {
+						aux = aux->next;
+						delete origin;
+						origin = aux;
+					}
+					SendMessage(hLbAgenda, LB_RESETCONTENT, 0, 0);
+					limpiarMostrador(hwnd);
 				}
-				else {
-					aux->prev->next = aux->next;
-					aux->next->prev = aux->prev;
-					delete aux;
-					aux = origin;
-				}
-
-				ordenamiento();
-				impresion();
-
-				HWND hLblListCount = GetDlgItem(hwnd, ST_LISTCOUNT);
-				int lista = SendMessage(hLbAgenda, LB_GETCOUNT, 0, 0);
-				char listaC[20];
-				_itoa(lista, listaC, 10);
-				SetWindowText(hLblListCount, listaC);
-
-				HWND hBtnEdit = GetDlgItem(hwnd, BTN_EDITARCITA);
-				HWND hBtnPagar = GetDlgItem(hwnd, BTN_PAGARCITA);
-				HWND hBtnEliminar = GetDlgItem(hwnd, BTN_ELIMINARCITA);
-				EnableWindow(hBtnEdit, false);
-				EnableWindow(hBtnPagar, false);
-				EnableWindow(hBtnEliminar, false);
-
-				HWND hStMascota = GetDlgItem(hwnd, ST_INFO_MASCOTA);
-				SetWindowText(hStMascota, "");
-				HWND hStEspecie = GetDlgItem(hwnd, ST_INFO_ESPECIE);
-				SetWindowText(hStEspecie, "");
-				HWND hStDueno = GetDlgItem(hwnd, ST_INFO_DUENO);
-				SetWindowText(hStDueno, "");
-				HWND hStTelefono = GetDlgItem(hwnd, ST_INFO_TELEFONO);
-				SetWindowText(hStTelefono, "");
-				HWND hStFechaHora = GetDlgItem(hwnd, ST_INFO_FECHA);
-				SetWindowText(hStFechaHora, "");
-				HWND hStCosto = GetDlgItem(hwnd, ST_INFO_COSTO);
-				SetWindowText(hStCosto, "");
-				HWND hStMotivo = GetDlgItem(hwnd, ST_INFO_MOTIVO);
-				SetWindowText(hStMotivo, "");
-				strcpy(chCambioFoto, "");
-				hPcFotoMascota = GetDlgItem(hwnd, BMP_MENU_MASCOTA1);
-				hBmpMascota = (HBITMAP)LoadImage(NULL, chCambioFoto, IMAGE_BITMAP, 90, 108, LR_LOADFROMFILE);
-				SendMessage(hPcFotoMascota, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hBmpMascota);
-				hPcFotoMascota = GetDlgItem(hwnd, BMP_MENU_MASCOTA2);
-				hBmpMascota = (HBITMAP)LoadImage(NULL, chCambioFoto, IMAGE_BITMAP, 90, 108, LR_LOADFROMFILE);
-				SendMessage(hPcFotoMascota, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hBmpMascota);
 			}
 		}
 	}break;
@@ -376,6 +388,7 @@ BOOL CALLBACK nuevaCita(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 		EnableMenuItem(hBarraMenu, BTN_NUEVACITA, MF_DISABLED);
 		EnableMenuItem(hBarraMenu, BTN_AGENDA, MF_ENABLED);
 		EnableMenuItem(hBarraMenu, BTN_EDITDOCINFO, MF_ENABLED);
+		EnableMenuItem(hBarraMenu, BTN_SALIR, MF_ENABLED);
 
 		HWND hCbEspecie = GetDlgItem(hwnd, CB_NC_ESPECIE);
 		SendMessage(hCbEspecie, CB_ADDSTRING, 0, (LPARAM)"Perro");
@@ -393,7 +406,7 @@ BOOL CALLBACK nuevaCita(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 		SetWindowText(hLblNombreMedicoNC, nombreMedico);
 		SetWindowText(hLblCedulaNC, cedula);
 		hPcFotoDoctor = GetDlgItem(hwnd, BMP_NC_DOCTOR);
-		hBmpDoctor = (HBITMAP)LoadImage(NULL, chDirFotoDoc, IMAGE_BITMAP, 75, 90, LR_LOADFROMFILE);
+		hBmpDoctor = (HBITMAP)LoadImage(NULL, chDirFotoDoc, IMAGE_BITMAP, 80, 96, LR_LOADFROMFILE);
 		SendMessage(hPcFotoDoctor, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hBmpDoctor);
 
 		hLblReloj = GetDlgItem(hwnd, ST_NC_RELOJ);
@@ -461,7 +474,7 @@ BOOL CALLBACK nuevaCita(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
 			strcpy(chCambioFoto, aux->image[1].c_str());
 			hPcFotoMascota = GetDlgItem(hwnd, BMP_NC_MASCOTA);
-			hBmpMascota = (HBITMAP)LoadImage(NULL, chCambioFoto, IMAGE_BITMAP, 95, 114, LR_LOADFROMFILE);
+			hBmpMascota = (HBITMAP)LoadImage(NULL, chCambioFoto, IMAGE_BITMAP, 100, 120, LR_LOADFROMFILE);
 			SendMessage(hPcFotoMascota, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hBmpMascota);
 			break;
 		}
@@ -474,7 +487,7 @@ BOOL CALLBACK nuevaCita(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
 			strcpy(chCambioFoto, aux->image[0].c_str());
 			hPcFotoMascota = GetDlgItem(hwnd, BMP_NC_MASCOTA);
-			hBmpMascota = (HBITMAP)LoadImage(NULL, chCambioFoto, IMAGE_BITMAP, 95, 114, LR_LOADFROMFILE);
+			hBmpMascota = (HBITMAP)LoadImage(NULL, chCambioFoto, IMAGE_BITMAP, 100, 120, LR_LOADFROMFILE);
 			SendMessage(hPcFotoMascota, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hBmpMascota);
 			break;
 		}
@@ -491,7 +504,7 @@ BOOL CALLBACK nuevaCita(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 			ofnFotoMascota.lpstrFilter = "BMP Images\0*.bmp\0All Files\0*.*\0";
 			if (GetOpenFileName(&ofnFotoMascota)) {
 				hPcFotoMascota = GetDlgItem(hwnd, BMP_NC_MASCOTA);
-				hBmpMascota = (HBITMAP)LoadImage(NULL, chCambioFoto, IMAGE_BITMAP, 95, 114, LR_LOADFROMFILE);
+				hBmpMascota = (HBITMAP)LoadImage(NULL, chCambioFoto, IMAGE_BITMAP, 100, 120, LR_LOADFROMFILE);
 				SendMessage(hPcFotoMascota, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hBmpMascota);
 			}
 
@@ -556,6 +569,7 @@ BOOL CALLBACK editarCita(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 		EnableMenuItem(hBarraMenu, BTN_NUEVACITA, MF_DISABLED);
 		EnableMenuItem(hBarraMenu, BTN_AGENDA, MF_DISABLED);
 		EnableMenuItem(hBarraMenu, BTN_EDITDOCINFO, MF_DISABLED);
+		EnableMenuItem(hBarraMenu, BTN_SALIR, MF_DISABLED);
 
 		HWND hCbEspecie = GetDlgItem(hwnd, CB_NC_ESPECIE);
 		SendMessage(hCbEspecie, CB_ADDSTRING, 0, (LPARAM)"Perro");
@@ -572,7 +586,7 @@ BOOL CALLBACK editarCita(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 		HWND hLblCedulaNC = GetDlgItem(hwnd, ST_NC_CEDULA);
 		SetWindowText(hLblNombreMedicoNC, nombreMedico);
 		hPcFotoDoctor = GetDlgItem(hwnd, BMP_NC_DOCTOR);
-		hBmpDoctor = (HBITMAP)LoadImage(NULL, chDirFotoDoc, IMAGE_BITMAP, 75, 90, LR_LOADFROMFILE);
+		hBmpDoctor = (HBITMAP)LoadImage(NULL, chDirFotoDoc, IMAGE_BITMAP, 80, 96, LR_LOADFROMFILE);
 		SendMessage(hPcFotoDoctor, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hBmpDoctor);
 		SetWindowText(hLblCedulaNC, cedula);
 
@@ -651,7 +665,7 @@ BOOL CALLBACK editarCita(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
 			strcpy(chCambioFoto, aux->image[1].c_str());
 			hPcFotoMascota = GetDlgItem(hwnd, BMP_NC_MASCOTA);
-			hBmpMascota = (HBITMAP)LoadImage(NULL, chCambioFoto, IMAGE_BITMAP, 95, 114, LR_LOADFROMFILE);
+			hBmpMascota = (HBITMAP)LoadImage(NULL, chCambioFoto, IMAGE_BITMAP, 100, 120, LR_LOADFROMFILE);
 			SendMessage(hPcFotoMascota, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hBmpMascota);
 			break;
 		}
@@ -664,7 +678,7 @@ BOOL CALLBACK editarCita(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
 			strcpy(chCambioFoto, aux->image[0].c_str());
 			hPcFotoMascota = GetDlgItem(hwnd, BMP_NC_MASCOTA);
-			hBmpMascota = (HBITMAP)LoadImage(NULL, chCambioFoto, IMAGE_BITMAP, 95, 114, LR_LOADFROMFILE);
+			hBmpMascota = (HBITMAP)LoadImage(NULL, chCambioFoto, IMAGE_BITMAP, 100, 120, LR_LOADFROMFILE);
 			SendMessage(hPcFotoMascota, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hBmpMascota);
 			break;
 		}
@@ -681,7 +695,7 @@ BOOL CALLBACK editarCita(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 			ofnFotoMascota.lpstrFilter = "BMP Images\0*.bmp\0All Files\0*.*\0";
 			if (GetOpenFileName(&ofnFotoMascota)) {
 				hPcFotoMascota = GetDlgItem(hwnd, BMP_NC_MASCOTA);
-				hBmpMascota = (HBITMAP)LoadImage(NULL, chCambioFoto, IMAGE_BITMAP, 95, 114, LR_LOADFROMFILE);
+				hBmpMascota = (HBITMAP)LoadImage(NULL, chCambioFoto, IMAGE_BITMAP, 100, 120, LR_LOADFROMFILE);
 				SendMessage(hPcFotoMascota, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hBmpMascota);
 			}
 
@@ -740,13 +754,14 @@ BOOL CALLBACK pagarCita(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 		EnableMenuItem(hBarraMenu, BTN_AGENDA, MF_ENABLED);
 		EnableMenuItem(hBarraMenu, BTN_NUEVACITA, MF_ENABLED);
 		EnableMenuItem(hBarraMenu, BTN_EDITDOCINFO, MF_ENABLED);
+		EnableMenuItem(hBarraMenu, BTN_SALIR, MF_DISABLED);
 
 		HWND hLblNombreMedicoPC = GetDlgItem(hwnd, ST_PC_DOCTOR);
 		HWND hLblCedulaPC = GetDlgItem(hwnd, ST_PC_CEDULA);
 		SetWindowText(hLblNombreMedicoPC, nombreMedico);
 		SetWindowText(hLblCedulaPC, cedula);
 		hPcFotoDoctor = GetDlgItem(hwnd, BMP_PC_DOCTOR);
-		hBmpDoctor = (HBITMAP)LoadImage(NULL, chDirFotoDoc, IMAGE_BITMAP, 75, 90, LR_LOADFROMFILE);
+		hBmpDoctor = (HBITMAP)LoadImage(NULL, chDirFotoDoc, IMAGE_BITMAP, 80, 96, LR_LOADFROMFILE);
 		SendMessage(hPcFotoDoctor, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hBmpDoctor);
 
 		strcpy(chCambioFoto, aux->image[0].c_str());
@@ -912,6 +927,7 @@ BOOL CALLBACK editarInfoDoctor(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 		EnableMenuItem(hBarraMenu, BTN_EDITDOCINFO, MF_DISABLED);
 		EnableMenuItem(hBarraMenu, BTN_AGENDA, MF_ENABLED);
 		EnableMenuItem(hBarraMenu, BTN_NUEVACITA, MF_ENABLED);
+		EnableMenuItem(hBarraMenu, BTN_SALIR, MF_ENABLED);
 
 		HWND hEdNombreMedico = GetDlgItem(hwnd, EDT_EDM_DOCTOR);
 		HWND hEdCedula = GetDlgItem(hwnd, EDT_EDM_CEDULA);
@@ -1457,6 +1473,43 @@ void impresion() {
 		aux = aux->next;
 	}
 	aux = origin;
+}
+
+void limpiarMostrador(HWND hwnd) {
+	HWND hLblListCount = GetDlgItem(hwnd, ST_LISTCOUNT);
+	int lista = SendMessage(hLbAgenda, LB_GETCOUNT, 0, 0);
+	char listaC[20];
+	_itoa(lista, listaC, 10);
+	SetWindowText(hLblListCount, listaC);
+
+	HWND hBtnEdit = GetDlgItem(hwnd, BTN_EDITARCITA);
+	HWND hBtnPagar = GetDlgItem(hwnd, BTN_PAGARCITA);
+	HWND hBtnEliminar = GetDlgItem(hwnd, BTN_ELIMINARCITA);
+	EnableWindow(hBtnEdit, false);
+	EnableWindow(hBtnPagar, false);
+	EnableWindow(hBtnEliminar, false);
+
+	HWND hStMascota = GetDlgItem(hwnd, ST_INFO_MASCOTA);
+	SetWindowText(hStMascota, "");
+	HWND hStEspecie = GetDlgItem(hwnd, ST_INFO_ESPECIE);
+	SetWindowText(hStEspecie, "");
+	HWND hStDueno = GetDlgItem(hwnd, ST_INFO_DUENO);
+	SetWindowText(hStDueno, "");
+	HWND hStTelefono = GetDlgItem(hwnd, ST_INFO_TELEFONO);
+	SetWindowText(hStTelefono, "");
+	HWND hStFechaHora = GetDlgItem(hwnd, ST_INFO_FECHA);
+	SetWindowText(hStFechaHora, "");
+	HWND hStCosto = GetDlgItem(hwnd, ST_INFO_COSTO);
+	SetWindowText(hStCosto, "");
+	HWND hStMotivo = GetDlgItem(hwnd, ST_INFO_MOTIVO);
+	SetWindowText(hStMotivo, "");
+	strcpy(chCambioFoto, "");
+	hPcFotoMascota = GetDlgItem(hwnd, BMP_MENU_MASCOTA1);
+	hBmpMascota = (HBITMAP)LoadImage(NULL, chCambioFoto, IMAGE_BITMAP, 90, 108, LR_LOADFROMFILE);
+	SendMessage(hPcFotoMascota, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hBmpMascota);
+	hPcFotoMascota = GetDlgItem(hwnd, BMP_MENU_MASCOTA2);
+	hBmpMascota = (HBITMAP)LoadImage(NULL, chCambioFoto, IMAGE_BITMAP, 90, 108, LR_LOADFROMFILE);
+	SendMessage(hPcFotoMascota, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hBmpMascota);
 }
 
 void fotoDoctor(HWND hwnd) {

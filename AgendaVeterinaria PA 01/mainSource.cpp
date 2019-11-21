@@ -69,16 +69,15 @@ fstream archivo;
 
 char chCambioFoto[MAX_PATH] = "";
 bool salida = false;
-bool entrada = true;
 int indexImage;
 #pragma endregion
 
 #pragma region PrototipoFunciones
 //Archivos
-void saveDoctor(HWND);
-void saveLista(HWND, CITA *origin);
-void loadDoctor(HWND);
-void loadLista(HWND);
+void saveDoctor();
+void saveLista(CITA *origin);
+void loadDoctor();
+void loadLista();
 //Operaciones
 bool verificarNum(string);
 bool verificarAlfa(string);
@@ -105,6 +104,9 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrev, PSTR cmdLine, int cShow) {
 	origin = aux = NULL;
 	hInstGlobal = hInst;
 
+	loadDoctor();
+	loadLista();
+
 	hAgenda = CreateDialog(hInstGlobal, MAKEINTRESOURCE(IDD_AGENDA), NULL, agendaVentanaPrincipal);
 	ShowWindow(hAgenda, SW_SHOW);
 	SetTimer(hAgenda, TM_RELOJ, 1000, NULL);
@@ -116,6 +118,9 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrev, PSTR cmdLine, int cShow) {
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);
 	}
+
+	saveDoctor();
+	saveLista(origin);
 	return 0;
 }
 
@@ -130,11 +135,6 @@ BOOL CALLBACK agendaVentanaPrincipal(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
 		EnableMenuItem(hBarraMenu, BTN_SALIR, MF_ENABLED);
 
 		SendMessage(hLbAgenda, LB_RESETCONTENT, 0, 0);
-
-		if (entrada) {
-			loadDoctor(hwnd);
-			loadLista(hwnd);
-		}
 
 		ordenamiento();
 
@@ -163,8 +163,6 @@ BOOL CALLBACK agendaVentanaPrincipal(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
 		char listaC[20];
 		strcpy(listaC, n.c_str());
 		SetWindowText(hLblListCount, listaC);
-
-		entrada = false;
 	}break;
 	case WM_COMMAND: {
 		//OPCIONES DE BARRA DE MENU
@@ -377,8 +375,6 @@ BOOL CALLBACK agendaVentanaPrincipal(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
 		break;
 	case WM_DESTROY:
 		if (salida) {
-			saveDoctor(hwnd);
-			saveLista(hwnd, origin);
 			PostQuitMessage(0);
 		}
 	    break;
@@ -581,8 +577,6 @@ BOOL CALLBACK nuevaCita(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 	}break;
 	case WM_DESTROY:
 		if (salida) {
-			saveDoctor(hwnd);
-			saveLista(hwnd, origin);
 			PostQuitMessage(0);
 		}
 		break;
@@ -992,8 +986,6 @@ BOOL CALLBACK editarInfoDoctor(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 	}break;
 	case WM_DESTROY:
 		if (salida) {
-			saveDoctor(hwnd);
-			saveLista(hwnd, origin);
 			PostQuitMessage(0);
 		}
 		break;
@@ -1052,10 +1044,10 @@ BOOL CALLBACK primerDoctor(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
 #pragma region Funciones
 //Archivos
-void saveDoctor(HWND hwnd) {
+void saveDoctor() {
 	archivo.open("datosDoctor.bin", ios::out | ios::trunc | ios::binary);
 	if (!archivo.is_open()) {
-		MessageBox(hwnd, "No se pudo guardar archivo del doctor.", "AVISO", MB_ICONERROR);
+		MessageBox(NULL, "No se pudo guardar archivo del doctor.", "AVISO", MB_ICONERROR);
 		return;
 	}
 	DOCTOR *temp = doc;
@@ -1063,10 +1055,10 @@ void saveDoctor(HWND hwnd) {
 	archivo.close();
 }
 
-void saveLista(HWND hwnd, CITA *origin) {
+void saveLista(CITA *origin) {
 	archivo.open("listaCitas.bin", ios::out | ios::trunc | ios::binary);
 	if (!archivo.is_open()) {
-		MessageBox(hwnd, "No se pudo guardar archivo de citas.", "AVISO", MB_ICONERROR);
+		MessageBox(NULL, "No se pudo guardar archivo de citas.", "AVISO", MB_ICONERROR);
 		return;
 	}
 	CITA *temp = origin;
@@ -1078,11 +1070,11 @@ void saveLista(HWND hwnd, CITA *origin) {
 	return;
 }
 
-void loadDoctor(HWND hwnd) {
+void loadDoctor() {
 	archivo.open("datosDoctor.bin", ios::in | ios::ate | ios::binary);
 	if (archivo) {
 		if (!archivo.is_open()) {
-			MessageBox(hwnd, "No se pudo cargar el archivo del doctor.", "AVISO", MB_ICONERROR);
+			MessageBox(NULL, "No se pudo cargar el archivo del doctor.", "AVISO", MB_ICONERROR);
 			return;
 		}
 		int size = archivo.tellg();
@@ -1102,11 +1094,11 @@ void loadDoctor(HWND hwnd) {
 	
 }
 
-void loadLista(HWND hwnd) {
+void loadLista() {
 	archivo.open("listaCitas.bin", ios::in | ios::ate | ios::binary);
 	if (archivo) {
 		if (!archivo.is_open()) {
-			MessageBox(hwnd, "No se pudo cargar el archivo de citas.", "AVISO", MB_ICONERROR);
+			MessageBox(NULL, "No se pudo cargar el archivo de citas.", "AVISO", MB_ICONERROR);
 			return;
 		}
 		int size = archivo.tellg();

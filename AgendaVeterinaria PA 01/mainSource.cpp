@@ -33,8 +33,8 @@ HWND hPcFotoMascota;
 
 HBITMAP hBmpDoctor;
 HBITMAP hBmpMascota;
-string tempImg1;
-string tempImg2;
+char tempImg1[MAX_PATH];
+char tempImg2[MAX_PATH];
 
 time_t allTime;
 struct tm *tiempoActual;
@@ -46,8 +46,8 @@ struct CITA {
 	string telefono;
 	string especie;
 	string motivoConsulta;
-	string image1;
-	string image2;
+	char image1[MAX_PATH] = "";
+	char image2[MAX_PATH] = "";
 	string fechaString;
 	string horaString;
 	int year;
@@ -216,12 +216,12 @@ BOOL CALLBACK agendaVentanaPrincipal(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
 					aux = aux->next;
 				}
 
-				strcpy(chCambioFoto, aux->image1.c_str());
+				strcpy(chCambioFoto, aux->image1);
 				hPcFotoMascota = GetDlgItem(hwnd, BMP_MENU_MASCOTA1);
 				hBmpMascota = (HBITMAP)LoadImage(NULL, chCambioFoto, IMAGE_BITMAP, 90, 108, LR_LOADFROMFILE);
 				SendMessage(hPcFotoMascota, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hBmpMascota);
 
-				strcpy(chCambioFoto, aux->image2.c_str());
+				strcpy(chCambioFoto, aux->image2);
 				hPcFotoMascota = GetDlgItem(hwnd, BMP_MENU_MASCOTA2);
 				hBmpMascota = (HBITMAP)LoadImage(NULL, chCambioFoto, IMAGE_BITMAP, 90, 108, LR_LOADFROMFILE);
 				SendMessage(hPcFotoMascota, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hBmpMascota);
@@ -490,7 +490,7 @@ BOOL CALLBACK nuevaCita(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 			hBtnIndexImage = GetDlgItem(hwnd, BTN_NC_PREV);
 			EnableWindow(hBtnIndexImage, true);
 
-			strcpy(chCambioFoto, aux->image2.c_str());
+			strcpy(chCambioFoto, aux->image2);
 			hPcFotoMascota = GetDlgItem(hwnd, BMP_NC_MASCOTA);
 			hBmpMascota = (HBITMAP)LoadImage(NULL, chCambioFoto, IMAGE_BITMAP, 100, 120, LR_LOADFROMFILE);
 			SendMessage(hPcFotoMascota, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hBmpMascota);
@@ -503,7 +503,7 @@ BOOL CALLBACK nuevaCita(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 			hBtnIndexImage = GetDlgItem(hwnd, BTN_NC_NEXT);
 			EnableWindow(hBtnIndexImage, true);
 
-			strcpy(chCambioFoto, aux->image1.c_str());
+			strcpy(chCambioFoto, aux->image1);
 			hPcFotoMascota = GetDlgItem(hwnd, BMP_NC_MASCOTA);
 			hBmpMascota = (HBITMAP)LoadImage(NULL, chCambioFoto, IMAGE_BITMAP, 100, 120, LR_LOADFROMFILE);
 			SendMessage(hPcFotoMascota, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hBmpMascota);
@@ -518,7 +518,7 @@ BOOL CALLBACK nuevaCita(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 			ofnFotoMascota.lpstrFile = chCambioFoto;
 			ofnFotoMascota.nMaxFile = MAX_PATH;
 			ofnFotoMascota.lpstrDefExt = "bmp";
-			ofnFotoMascota.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
+			ofnFotoMascota.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_NOCHANGEDIR;
 			ofnFotoMascota.lpstrFilter = "BMP Images\0*.bmp\0All Files\0*.*\0";
 			if (GetOpenFileName(&ofnFotoMascota)) {
 				hPcFotoMascota = GetDlgItem(hwnd, BMP_NC_MASCOTA);
@@ -526,12 +526,11 @@ BOOL CALLBACK nuevaCita(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 				SendMessage(hPcFotoMascota, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hBmpMascota);
 			}
 
-			string foto(chCambioFoto);
 			if (indexImage == 0) {
-				aux->image1 = foto;
+				strcpy(aux->image1, chCambioFoto);
 			}
 			if (indexImage == 1) {
-				aux->image2 = foto;
+				strcpy(aux->image1, chCambioFoto);
 			}
 			
 			break;
@@ -617,13 +616,13 @@ BOOL CALLBACK editarCita(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
 		hLblReloj = GetDlgItem(hwnd, ST_NC_RELOJ);
 
-		strcpy(chCambioFoto, aux->image1.c_str());
+		strcpy(chCambioFoto, aux->image1);
 		hPcFotoMascota = GetDlgItem(hwnd, BMP_NC_MASCOTA);
 		hBmpMascota = (HBITMAP)LoadImage(NULL, chCambioFoto, IMAGE_BITMAP, 100, 120, LR_LOADFROMFILE);
 		SendMessage(hPcFotoMascota, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hBmpMascota);
 		indexImage = 0;
-		tempImg1 = aux->image1;
-		tempImg2 = aux->image2;
+		strcpy(tempImg1, aux->image1); 
+		strcpy(tempImg2, aux->image2);
 
 		char buffer[80];
 		HWND hEdNombreD = GetDlgItem(hwnd, EDT_NC_DNOMBRE);
@@ -679,7 +678,7 @@ BOOL CALLBACK editarCita(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 			hBtnIndexImage = GetDlgItem(hwnd, BTN_NC_PREV);
 			EnableWindow(hBtnIndexImage, true);
 
-			strcpy(chCambioFoto, aux->image2.c_str());
+			strcpy(chCambioFoto, aux->image2);
 			hPcFotoMascota = GetDlgItem(hwnd, BMP_NC_MASCOTA);
 			hBmpMascota = (HBITMAP)LoadImage(NULL, chCambioFoto, IMAGE_BITMAP, 100, 120, LR_LOADFROMFILE);
 			SendMessage(hPcFotoMascota, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hBmpMascota);
@@ -692,7 +691,7 @@ BOOL CALLBACK editarCita(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 			hBtnIndexImage = GetDlgItem(hwnd, BTN_NC_NEXT);
 			EnableWindow(hBtnIndexImage, true);
 
-			strcpy(chCambioFoto, aux->image1.c_str());
+			strcpy(chCambioFoto, aux->image1);
 			hPcFotoMascota = GetDlgItem(hwnd, BMP_NC_MASCOTA);
 			hBmpMascota = (HBITMAP)LoadImage(NULL, chCambioFoto, IMAGE_BITMAP, 100, 120, LR_LOADFROMFILE);
 			SendMessage(hPcFotoMascota, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hBmpMascota);
@@ -715,12 +714,11 @@ BOOL CALLBACK editarCita(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 				SendMessage(hPcFotoMascota, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hBmpMascota);
 			}
 
-			string foto(chCambioFoto);
 			if (indexImage == 0) {
-				aux->image1 = foto;
+				strcpy(aux->image1, chCambioFoto);
 			}
 			if (indexImage == 1) {
-				aux->image2 = foto;
+				strcpy(aux->image2, chCambioFoto);
 			}
 			break;
 		}
@@ -728,8 +726,8 @@ BOOL CALLBACK editarCita(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 			borrarFotoMascota(hwnd);
 		}
 		if (LOWORD(wParam) == BTN_NC_CANCEL && HIWORD(wParam) == BN_CLICKED) {
-			aux->image1 = tempImg1;
-			aux->image2 = tempImg2;
+			strcpy(aux->image1, tempImg1);
+			strcpy(aux->image2, tempImg2);
 
 			aux = origin;
 			KillTimer(hwnd, TM_EDC_RELOJ);
@@ -780,12 +778,12 @@ BOOL CALLBACK pagarCita(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 		hBmpDoctor = (HBITMAP)LoadImage(NULL, chDirFotoDoc, IMAGE_BITMAP, 80, 96, LR_LOADFROMFILE);
 		SendMessage(hPcFotoDoctor, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hBmpDoctor);
 
-		strcpy(chCambioFoto, aux->image1.c_str());
+		strcpy(chCambioFoto, aux->image1);
 		hPcFotoMascota = GetDlgItem(hwnd, BMP_PC_MASCOTA1);
 		hBmpMascota = (HBITMAP)LoadImage(NULL, chCambioFoto, IMAGE_BITMAP, 95, 114, LR_LOADFROMFILE);
 		SendMessage(hPcFotoMascota, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hBmpMascota);
 
-		strcpy(chCambioFoto, aux->image2.c_str());
+		strcpy(chCambioFoto, aux->image2);
 		hPcFotoMascota = GetDlgItem(hwnd, BMP_PC_MASCOTA2);
 		hBmpMascota = (HBITMAP)LoadImage(NULL, chCambioFoto, IMAGE_BITMAP, 95, 114, LR_LOADFROMFILE);
 		SendMessage(hPcFotoMascota, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hBmpMascota);
@@ -1006,9 +1004,13 @@ BOOL CALLBACK editarInfoDoctor(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 
 BOOL CALLBACK primerDoctor(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 	switch (msg) {
-	case WM_INITDIALOG:
+	case WM_INITDIALOG:{
+		int size = sizeof(CITA);
+		char buffer[50];
+		_itoa(size, buffer, 10);
+		MessageBox(hwnd, buffer, "Tamaño", MB_OK);
 		MessageBox(hwnd, "Hola, doctor. Ingrese sus datos para empezar su agenda.", "BIENVENIDO", MB_ICONINFORMATION);
-		break;
+	}break;
 	case WM_COMMAND:
 		if (LOWORD(wParam) == BTN_EDM_DOCTOR && HIWORD(wParam) == BN_CLICKED) {
 			fotoDoctor(hwnd);
@@ -1101,8 +1103,8 @@ void loadLista(HWND hwnd) {
 		aux->telefono = temp->telefono;
 		aux->especie = temp->especie;
 		aux->motivoConsulta = temp->motivoConsulta;
-		aux->image1 = temp->image1;
-		aux->image2 = temp->image2;
+		strcpy(aux->image1, temp->image1);
+		strcpy(aux->image2, temp->image2);
 		aux->fechaString = temp->fechaString;
 		aux->horaString = temp->horaString;
 		aux->year = temp->year;
@@ -1462,8 +1464,10 @@ void intercambio(CITA *auxActual, CITA *auxProx) {
 	string tTel = auxProx->telefono;
 	string tEsp = auxProx->especie;
 	string tMotivo = auxProx->motivoConsulta;
-	string tImg0 = auxProx->image1;
-	string tImg1 = auxProx->image2;
+	char tImg1[MAX_PATH];
+	strcpy(tImg1, auxProx->image1);
+	char tImg2[MAX_PATH];
+	strcpy(tImg2, auxProx->image2);
 	string tFechaStr = auxProx->fechaString;
 	string tHoraStr = auxProx->horaString;
 	int tY = auxProx->year;
@@ -1480,8 +1484,8 @@ void intercambio(CITA *auxActual, CITA *auxProx) {
 	auxProx->telefono = auxActual->telefono;
 	auxProx->especie = auxActual->especie;
 	auxProx->motivoConsulta = auxActual->motivoConsulta;
-	auxProx->image1 = auxActual->image1;
-	auxProx->image2 = auxActual->image2;
+	strcpy(auxProx->image1, auxActual->image1); 
+	strcpy(auxProx->image2, auxActual->image2);
 	auxProx->fechaString = auxActual->fechaString;
 	auxProx->horaString = auxActual->horaString;
 	auxProx->year = auxActual->year;
@@ -1498,8 +1502,8 @@ void intercambio(CITA *auxActual, CITA *auxProx) {
 	auxActual->telefono = tTel;
 	auxActual->especie = tEsp;
 	auxActual->motivoConsulta = tMotivo;
-	auxActual->image1 = tImg0;
-	auxActual->image2 = tImg1;
+	strcpy(auxActual->image1, tImg1);
+	strcpy(auxActual->image2, tImg2);
 	auxActual->fechaString = tFechaStr;
 	auxActual->horaString = tHoraStr;
 	auxActual->year = tY;
@@ -1583,10 +1587,10 @@ void fotoDoctor(HWND hwnd) {
 
 void borrarFotoMascota(HWND hwnd) {
 	if (indexImage == 0) {
-		aux->image1 = "";
+		strcpy(aux->image1, "");
 	}
 	if (indexImage == 1) {
-		aux->image2 = "";
+		strcpy(aux->image2, "");
 	}
 	strcpy(chCambioFoto, "");
 	hPcFotoMascota = GetDlgItem(hwnd, BMP_NC_MASCOTA);

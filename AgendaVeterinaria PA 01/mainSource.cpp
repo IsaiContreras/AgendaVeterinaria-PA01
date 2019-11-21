@@ -41,11 +41,11 @@ struct tm *tiempoActual;
 
 struct CITA {
 	CITA *prev;
-	string nombreDueño;
-	string nombreMascota;
+	char nombreDueño[50];
+	char nombreMascota[50];
 	string telefono;
 	string especie;
-	string motivoConsulta;
+	char motivoConsulta[MAX_PATH];
 	char image1[MAX_PATH] = "";
 	char image2[MAX_PATH] = "";
 	string fechaString;
@@ -232,16 +232,14 @@ BOOL CALLBACK agendaVentanaPrincipal(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
 				SendMessage(hPcFotoMascota, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hBmpMascota);
 
 				HWND hStMascota = GetDlgItem(hwnd, ST_INFO_MASCOTA);
-				strcpy(buffer, aux->nombreMascota.c_str());
-				SetWindowText(hStMascota, buffer);
+				SetWindowText(hStMascota, aux->nombreMascota);
 
 				HWND hStEspecie = GetDlgItem(hwnd, ST_INFO_ESPECIE);
 				strcpy(buffer, aux->especie.c_str());
 				SetWindowText(hStEspecie, buffer);
 
 				HWND hStDueno = GetDlgItem(hwnd, ST_INFO_DUENO);
-				strcpy(buffer, aux->nombreDueño.c_str());
-				SetWindowText(hStDueno, buffer);
+				SetWindowText(hStDueno, aux->nombreDueño);
 
 				HWND hStTelefono = GetDlgItem(hwnd, ST_INFO_TELEFONO);
 				strcpy(buffer, aux->telefono.c_str());
@@ -272,8 +270,7 @@ BOOL CALLBACK agendaVentanaPrincipal(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
 				SetWindowText(hStCosto, buffer);
 
 				HWND hStMotivo = GetDlgItem(hwnd, ST_INFO_MOTIVO);
-				strcpy(buffer, aux->motivoConsulta.c_str());
-				SetWindowText(hStMotivo, buffer);
+				SetWindowText(hStMotivo, aux->motivoConsulta);
 
 				HWND hBtnEdit = GetDlgItem(hwnd, BTN_EDITARCITA);
 				HWND hBtnPagar = GetDlgItem(hwnd, BTN_PAGARCITA);
@@ -308,7 +305,8 @@ BOOL CALLBACK agendaVentanaPrincipal(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
 			aux = origin;
 			while (aux != NULL) {
 				if (aux->fechaString.compare(filter) == 0) {
-					string display = aux->nombreMascota + "  |  " + aux->fechaString + "  |  " + aux->horaString;
+					string mascota(aux->nombreMascota);
+					string display = mascota + "  |  " + aux->fechaString + "  |  " + aux->horaString;
 					char buffL[100];
 					strcpy(buffL, display.c_str());
 					SendMessage(hLbAgenda, LB_ADDSTRING, 0, (LPARAM)buffL);
@@ -628,21 +626,19 @@ BOOL CALLBACK editarCita(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 		hBmpMascota = (HBITMAP)LoadImage(NULL, chCambioFoto, IMAGE_BITMAP, 100, 120, LR_LOADFROMFILE);
 		SendMessage(hPcFotoMascota, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hBmpMascota);
 		indexImage = 0;
-		strcpy(tempImg1, aux->image1); 
+		strcpy(tempImg1, aux->image1);
 		strcpy(tempImg2, aux->image2);
 
 		char buffer[80];
 		HWND hEdNombreD = GetDlgItem(hwnd, EDT_NC_DNOMBRE);
-		strcpy(buffer, aux->nombreDueño.c_str());
-		SetWindowText(hEdNombreD, buffer);
+		SetWindowText(hEdNombreD, aux->nombreDueño);
 
 		HWND hEdTelefono = GetDlgItem(hwnd, EDT_NC_TELEFONO);
 		strcpy(buffer, aux->telefono.c_str());
 		SetWindowText(hEdTelefono, buffer);
 
 		HWND hEdNombreM = GetDlgItem(hwnd, EDT_NC_MNOMBRE);
-		strcpy(buffer, aux->nombreMascota.c_str());
-		SetWindowText(hEdNombreM, buffer);
+		SetWindowText(hEdNombreM, aux->nombreMascota);
 
 		SendMessage(hCbEspecie, CB_SETCURSEL, aux->especieIndex, 0);
 
@@ -652,8 +648,7 @@ BOOL CALLBACK editarCita(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 		SetWindowText(hStFechaA, buffer);
 
 		HWND hEdMotivo = GetDlgItem(hwnd, EDT_NC_MOTIVO);
-		strcpy(buffer, aux->motivoConsulta.c_str());
-		SetWindowText(hEdMotivo, buffer);
+		SetWindowText(hEdMotivo, aux->motivoConsulta);
 
 		HWND hEdCosto = GetDlgItem(hwnd, EDT_NC_COSTO);
 		snprintf(buffer, sizeof(buffer), "%.2f", aux->costo);
@@ -797,16 +792,14 @@ BOOL CALLBACK pagarCita(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
 		char buffer[80];
 		HWND hStMascota = GetDlgItem(hwnd, ST_PC_MNOMBRE);
-		strcpy(buffer, aux->nombreMascota.c_str());
-		SetWindowText(hStMascota, buffer);
+		SetWindowText(hStMascota, aux->nombreMascota);
 
 		HWND hStEspecie = GetDlgItem(hwnd, ST_PC_ESPECIE);
 		strcpy(buffer, aux->especie.c_str());
 		SetWindowText(hStEspecie, buffer);
 
 		HWND hStDueno = GetDlgItem(hwnd, ST_PC_DNOMBRE);
-		strcpy(buffer, aux->nombreDueño.c_str());
-		SetWindowText(hStDueno, buffer);
+		SetWindowText(hStDueno, aux->nombreDueño);
 
 		HWND hStTelefono = GetDlgItem(hwnd, ST_PC_TELEFONO);
 		strcpy(buffer, aux->telefono.c_str());
@@ -818,8 +811,7 @@ BOOL CALLBACK pagarCita(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 		SetWindowText(hStFechaHora, buffer);
 
 		HWND hStMotivo = GetDlgItem(hwnd, EDT_PC_MOTIVO);
-		strcpy(buffer, aux->motivoConsulta.c_str());
-		SetWindowText(hStMotivo, buffer);
+		SetWindowText(hStMotivo, aux->motivoConsulta);
 
 		HWND hStCosto = GetDlgItem(hwnd, ST_PC_COSTO);
 		char costoC[20];
@@ -1080,7 +1072,7 @@ void saveLista(HWND hwnd, CITA *origin) {
 	}
 	CITA *temp = origin;
 	while (temp != NULL) {
-		archivo.write(reinterpret_cast<char *>(temp), sizeof(CITA));
+		archivo.write(reinterpret_cast<char*>(temp), sizeof(CITA));
 		temp = temp->next;
 	}
 	archivo.close();
@@ -1101,7 +1093,7 @@ void loadDoctor(HWND hwnd) {
 		doc = new DOCTOR;
 		DOCTOR *temp = new DOCTOR;
 		archivo.seekg(0);
-		archivo.read(reinterpret_cast<char *>(temp), sizeof(DOCTOR));
+		archivo.read(reinterpret_cast<char*>(temp), sizeof(DOCTOR));
 		strcpy(doc->nombreMedico, temp->nombreMedico);
 		strcpy(doc->cedula, temp->cedula);
 		strcpy(doc->chDirFotoDoc, temp->chDirFotoDoc);
@@ -1137,12 +1129,12 @@ void loadLista(HWND hwnd) {
 			}
 			CITA *temp = new CITA;
 			archivo.seekg(i * sizeof(CITA));
-			archivo.read(reinterpret_cast<char *>(temp), sizeof(CITA));
-			aux->nombreDueño = temp->nombreDueño;
-			aux->nombreMascota = temp->nombreMascota;
+			archivo.read(reinterpret_cast<char*>(temp), sizeof(CITA));
+			strcpy(aux->nombreDueño, temp->nombreDueño);
+			strcpy(aux->nombreMascota, temp->nombreMascota);
 			aux->telefono = temp->telefono;
 			aux->especie = temp->especie;
-			aux->motivoConsulta = temp->motivoConsulta;
+			strcpy(aux->motivoConsulta, temp->motivoConsulta); 
 			strcpy(aux->image1, temp->image1);
 			strcpy(aux->image2, temp->image2);
 			aux->fechaString = temp->fechaString;
@@ -1155,7 +1147,7 @@ void loadLista(HWND hwnd) {
 			aux->especieIndex = temp->especieIndex;
 			aux->formaPago = temp->formaPago;
 			aux->costo = temp->costo;
-			delete reinterpret_cast<char *>(temp);
+			delete reinterpret_cast<char*>(temp);
 			aux->next = NULL;
 			aux = origin;
 		}
@@ -1211,7 +1203,7 @@ bool introducirDatos(HWND hwnd) {
 			return r;
 		}
 		else {
-			aux->nombreMascota = s;
+			strcpy(aux->nombreMascota, buff);
 		}
 	}
 	else {
@@ -1243,7 +1235,7 @@ bool introducirDatos(HWND hwnd) {
 			return r;
 		}
 		else {
-			aux->nombreDueño = s;
+			strcpy(aux->nombreDueño, buff);
 		}
 	}
 	else {
@@ -1425,8 +1417,7 @@ bool introducirDatos(HWND hwnd) {
 	length = GetWindowTextLength(hEdMotivo);
 	if (length > 0) {
 		GetWindowText(hEdMotivo, buff, length + 1);
-		string m(buff);
-		aux->motivoConsulta = m;
+		strcpy(aux->motivoConsulta, buff);
 	}
 	else {
 		MessageBox(hwnd, "Especifique el motivo de la consulta.", "AVISO", MB_ICONEXCLAMATION);
@@ -1500,11 +1491,14 @@ void ordenamiento() {
 }
 
 void intercambio(CITA *auxActual, CITA *auxProx) {
-	string tNombreD = auxProx->nombreDueño;
-	string tNombreM = auxProx->nombreMascota;
+	char tNombreD[50];
+	strcpy(tNombreD, auxProx->nombreDueño);
+	char tNombreM[50];
+	strcpy(tNombreM, auxProx->nombreMascota);
 	string tTel = auxProx->telefono;
 	string tEsp = auxProx->especie;
-	string tMotivo = auxProx->motivoConsulta;
+	char tMotivo[MAX_PATH];
+	strcpy(tMotivo, aux->motivoConsulta);
 	char tImg1[MAX_PATH];
 	strcpy(tImg1, auxProx->image1);
 	char tImg2[MAX_PATH];
@@ -1520,11 +1514,11 @@ void intercambio(CITA *auxActual, CITA *auxProx) {
 	int tPago = auxProx->formaPago;
 	float tCosto = auxProx->costo;
 
-	auxProx->nombreDueño = auxActual->nombreDueño;
-	auxProx->nombreMascota = auxActual->nombreMascota;
+	strcpy(auxProx->nombreDueño, auxActual->nombreDueño);
+	strcpy(auxProx->nombreMascota, auxActual->nombreMascota);
 	auxProx->telefono = auxActual->telefono;
 	auxProx->especie = auxActual->especie;
-	auxProx->motivoConsulta = auxActual->motivoConsulta;
+	strcpy(auxProx->motivoConsulta, auxActual->motivoConsulta);
 	strcpy(auxProx->image1, auxActual->image1); 
 	strcpy(auxProx->image2, auxActual->image2);
 	auxProx->fechaString = auxActual->fechaString;
@@ -1538,11 +1532,11 @@ void intercambio(CITA *auxActual, CITA *auxProx) {
 	auxProx->formaPago = auxActual->formaPago;
 	auxProx->costo = auxActual->costo;
 
-	auxActual->nombreDueño = tNombreD;
-	auxActual->nombreMascota = tNombreM;
+	strcpy(auxActual->nombreDueño, tNombreD);
+	strcpy(auxActual->nombreMascota, tNombreM);
 	auxActual->telefono = tTel;
 	auxActual->especie = tEsp;
-	auxActual->motivoConsulta = tMotivo;
+	strcpy(auxActual->motivoConsulta, tMotivo);
 	strcpy(auxActual->image1, tImg1);
 	strcpy(auxActual->image2, tImg2);
 	auxActual->fechaString = tFechaStr;
@@ -1560,7 +1554,8 @@ void intercambio(CITA *auxActual, CITA *auxProx) {
 void impresion() {
 	aux = origin;
 	while (aux != NULL) {
-		string display = aux->nombreMascota + "  |  " + aux->fechaString + "  |  " + aux->horaString;
+		string mascota(aux->nombreMascota);
+		string display = mascota + "  |  " + aux->fechaString + "  |  " + aux->horaString;
 		char buffL[100];
 		strcpy(buffL, display.c_str());
 		SendMessage(hLbAgenda, LB_ADDSTRING, 0, (LPARAM)buffL);

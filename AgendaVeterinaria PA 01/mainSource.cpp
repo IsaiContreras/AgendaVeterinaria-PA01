@@ -530,7 +530,7 @@ BOOL CALLBACK nuevaCita(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 				strcpy(aux->image1, chCambioFoto);
 			}
 			if (indexImage == 1) {
-				strcpy(aux->image1, chCambioFoto);
+				strcpy(aux->image2, chCambioFoto);
 			}
 			
 			break;

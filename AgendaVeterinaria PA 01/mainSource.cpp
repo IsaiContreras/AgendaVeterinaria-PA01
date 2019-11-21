@@ -1,5 +1,4 @@
 #include <Windows.h>
-#include <iostream>
 #include <fstream>
 #include <string>
 #include <time.h>
@@ -62,7 +61,7 @@ struct CITA {
 }*origin, *aux;
 struct DOCTOR {
 	char nombreMedico[50] = { NULL };
-	char cedula[20] = { NULL };
+	char cedula[30] = { NULL };
 	char chDirFotoDoc[MAX_PATH] = "";
 }*doc;
 

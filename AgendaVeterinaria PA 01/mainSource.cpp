@@ -1,4 +1,6 @@
 #include <Windows.h>
+#include <iostream>
+#include <fstream>
 #include <string>
 #include <time.h>
 #include "resource.h"
@@ -57,15 +59,25 @@ struct CITA {
 	CITA *next;
 }*origin, *aux;
 
+fstream archivoDatosDoc;
+fstream archivoCitas;
+
 char nombreMedico[50] = {NULL};
 char cedula[20] = {NULL};
 char chDirFotoDoc[MAX_PATH] = "";
 char chCambioFoto[MAX_PATH] = "";
 bool salida = false;
+bool entrada = true;
 int indexImage;
 #pragma endregion
 
 #pragma region PrototipoFunciones
+//Archivos
+void saveDoc(HWND);
+void saveLista(HWND);
+void loadDoc(HWND);
+void loadLista(HWND);
+//Operaciones
 bool verificarNum(string);
 bool verificarAlfa(string);
 bool introducirDatos(HWND);
@@ -92,7 +104,6 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrev, PSTR cmdLine, int cShow) {
 	hInstGlobal = hInst;
 
 	hAgenda = CreateDialog(hInstGlobal, MAKEINTRESOURCE(IDD_AGENDA), NULL, agendaVentanaPrincipal);
-
 	ShowWindow(hAgenda, SW_SHOW);
 	SetTimer(hAgenda, TM_RELOJ, 1000, NULL);
 
@@ -118,6 +129,11 @@ BOOL CALLBACK agendaVentanaPrincipal(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
 
 		SendMessage(hLbAgenda, LB_RESETCONTENT, 0, 0);
 
+		if (entrada) {
+			loadDoc(hwnd);
+			loadLista(hwnd);
+		}
+
 		ordenamiento();
 
 		hLbAgenda = GetDlgItem(hwnd, IDC_LISTACITAS);
@@ -127,6 +143,7 @@ BOOL CALLBACK agendaVentanaPrincipal(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
 
 		hLblNombreMedico = GetDlgItem(hwnd, ST_MENU_DOCTOR);
 		hLblCedula = GetDlgItem(hwnd, ST_MENU_CEDULA);
+
 		if (nombreMedico[0] != NULL) {
 			SetWindowText(hLblNombreMedico, nombreMedico);
 			SetWindowText(hLblCedula, cedula);
@@ -144,6 +161,8 @@ BOOL CALLBACK agendaVentanaPrincipal(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
 		char listaC[20];
 		strcpy(listaC, n.c_str());
 		SetWindowText(hLblListCount, listaC);
+
+		entrada = false;
 	}break;
 	case WM_COMMAND: {
 		//OPCIONES DE BARRA DE MENU
@@ -358,6 +377,8 @@ BOOL CALLBACK agendaVentanaPrincipal(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
 		break;
 	case WM_DESTROY:
 		if (salida) {
+			saveDoc(hwnd);
+			saveLista(hwnd);
 			PostQuitMessage(0);
 		}
 	    break;
@@ -555,6 +576,8 @@ BOOL CALLBACK nuevaCita(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 	}break;
 	case WM_DESTROY:
 		if (salida) {
+			saveDoc(hwnd);
+			saveLista(hwnd);
 			PostQuitMessage(0);
 		}
 		break;
@@ -729,11 +752,6 @@ BOOL CALLBACK editarCita(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 		strftime(reloj, 80, "Hoy es: %d/%m/%Y  %I:%M:%S", tiempoActual);
 		SetWindowText(hLblReloj, reloj);
 	}break;
-	case WM_DESTROY:
-		if (salida) {
-			PostQuitMessage(0);
-		}
-		break;
 	}
 	return FALSE;
 }
@@ -873,11 +891,6 @@ BOOL CALLBACK pagarCita(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 			SetTimer(hAgenda, TM_RELOJ, 1000, NULL);
 		}
 		break;
-	case WM_DESTROY:
-		if (salida) {
-			PostQuitMessage(0);
-		}
-		break;
 	}
 	return FALSE;
 }
@@ -976,6 +989,8 @@ BOOL CALLBACK editarInfoDoctor(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 	}break;
 	case WM_DESTROY:
 		if (salida) {
+			saveDoc(hwnd);
+			saveLista(hwnd);
 			PostQuitMessage(0);
 		}
 		break;
@@ -1033,6 +1048,99 @@ BOOL CALLBACK primerDoctor(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 #pragma endregion
 
 #pragma region Funciones
+//Archivos
+void saveDoc(HWND hwnd) {
+	archivoDatosDoc.open("datosDoc.bin", ios::out | ios::trunc | ios::binary);
+	if (!archivoDatosDoc.is_open()) {
+		MessageBox(hwnd, "No se pudo guardar los datos del doctor.", "AVISO", MB_ICONERROR);
+		return;
+	}
+	archivoDatosDoc.write(nombreMedico, strlen(nombreMedico));
+	archivoDatosDoc.write(cedula, strlen(cedula));
+	archivoDatosDoc.write(chDirFotoDoc, strlen(chDirFotoDoc));
+	archivoDatosDoc.close();
+}
+void saveLista(HWND hwnd) {
+	archivoCitas.open("listaCitas.bin", ios::out | ios::trunc | ios::binary);
+	if (!archivoCitas.is_open()) {
+		MessageBox(hwnd, "No se pudo guardar archivo de citas.", "AVISO", MB_ICONERROR);
+		return;
+	}
+	CITA *temp = origin;
+	while (temp != NULL) {
+		archivoCitas.write(reinterpret_cast<char *>(temp), sizeof(CITA));
+		temp = temp->next;
+	}
+	archivoCitas.close();
+	return;
+}
+void loadDoc(HWND hwnd) {
+	int content;
+	archivoDatosDoc.open("datosDoc.bin", ios::in | ios::ate | ios::binary);
+	if (!archivoDatosDoc.is_open()) {
+		MessageBox(hwnd, "No se pudo cargar los datos del doctor.", "AVISO", MB_ICONERROR);
+		return;
+	}
+	int size = archivoDatosDoc.tellg();
+	if (size == 0) {
+		return;
+	}
+	archivoDatosDoc.read(nombreMedico, strlen(nombreMedico));
+	archivoDatosDoc.read(cedula, strlen(cedula));
+	archivoDatosDoc.read(chDirFotoDoc, strlen(chDirFotoDoc));
+	archivoDatosDoc.close();
+}
+void loadLista(HWND hwnd) {
+	archivoCitas.open("listaCitas.bin", ios::in | ios::ate | ios::binary);
+	if (!archivoCitas.is_open()) {
+		MessageBox(hwnd, "No se pudo cargar el archivo de citas.", "AVISO", MB_ICONERROR);
+		return;
+	}
+	int size = archivoCitas.tellg();
+	if (size == 0) {
+		return;
+	}
+	for (int i = 0; i < (size / sizeof(CITA)); i++) {
+		if (origin == NULL) {
+			origin = new CITA;
+			aux = origin;
+			aux->prev = NULL;
+		}
+		else {
+			while (aux->next != NULL)
+				aux = aux->next;
+			aux->next = new CITA;
+			aux->next->prev = aux;
+			aux = aux->next;
+		}
+		CITA *temp = new CITA;
+		archivoCitas.seekg(i * sizeof(CITA));
+		archivoCitas.read(reinterpret_cast<char *>(temp), sizeof(CITA));
+		aux->nombreDueño = temp->nombreDueño;
+		aux->nombreMascota = temp->nombreMascota;
+		aux->telefono = temp->telefono;
+		aux->especie = temp->especie;
+		aux->motivoConsulta = temp->motivoConsulta;
+		aux->image[0] = temp->image[0];
+		aux->image[1] = temp->image[1];
+		aux->fechaString = temp->fechaString;
+		aux->horaString = temp->horaString;
+		aux->year = temp->year;
+		aux->month = temp->month;
+		aux->day = temp->day;
+		aux->hour = temp->hour;
+		aux->minutes = temp->minutes;
+		aux->especieIndex = temp->especieIndex;
+		aux->formaPago = temp->formaPago;
+		aux->costo = temp->costo;
+		delete reinterpret_cast<char *>(temp);
+		aux->next = NULL;
+		aux = origin;
+	}
+	archivoCitas.close();
+}
+
+//Operaciones
 bool verificarNum(string c) {
 	bool r = false;
 	int n = c.size();

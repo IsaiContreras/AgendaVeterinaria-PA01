@@ -45,8 +45,8 @@ struct CITA {
 	string telefono;
 	string especie;
 	char motivoConsulta[MAX_PATH];
-	char image1[MAX_PATH] = "";
-	char image2[MAX_PATH] = "";
+	char image1[MAX_PATH];
+	char image2[MAX_PATH];
 	string fechaString;
 	string horaString;
 	int year;
@@ -189,6 +189,9 @@ BOOL CALLBACK agendaVentanaPrincipal(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
 			break;
 		}
 		//GESTIÓN DE CITAS
+		if (LOWORD(wParam) == BTN_SAVE && HIWORD(wParam) == BN_CLICKED) {
+			saveLista(origin);
+		}
 		if (LOWORD(wParam) == BTN_SELECT && HIWORD(wParam) == BN_CLICKED) {
 			int index = SendMessage(hLbAgenda, LB_GETCURSEL, 0, 0);
 			if (index > -1) {
@@ -375,6 +378,7 @@ BOOL CALLBACK agendaVentanaPrincipal(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
 		break;
 	case WM_DESTROY:
 		if (salida) {
+			aux = origin;
 			PostQuitMessage(0);
 		}
 	    break;
@@ -428,6 +432,8 @@ BOOL CALLBACK nuevaCita(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
 		hLblReloj = GetDlgItem(hwnd, ST_NC_RELOJ);
 		indexImage = 0;
+		strcpy(aux->image1, "");
+		strcpy(aux->image2, "");
 	}break;
 	case WM_COMMAND: {
 		//OPCIONES BARRA DE MENU
@@ -986,6 +992,7 @@ BOOL CALLBACK editarInfoDoctor(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 	}break;
 	case WM_DESTROY:
 		if (salida) {
+			aux = origin;
 			PostQuitMessage(0);
 		}
 		break;
@@ -1084,7 +1091,7 @@ void loadDoctor() {
 		doc = new DOCTOR;
 		DOCTOR *temp = new DOCTOR;
 		archivo.seekg(0);
-		archivo.read(reinterpret_cast<char*>(temp), sizeof(DOCTOR));
+		archivo.read(reinterpret_cast<char *>(temp), sizeof(DOCTOR));
 		strcpy(doc->nombreMedico, temp->nombreMedico);
 		strcpy(doc->cedula, temp->cedula);
 		strcpy(doc->chDirFotoDoc, temp->chDirFotoDoc);
@@ -1120,7 +1127,7 @@ void loadLista() {
 			}
 			CITA *temp = new CITA;
 			archivo.seekg(i * sizeof(CITA));
-			archivo.read(reinterpret_cast<char*>(temp), sizeof(CITA));
+			archivo.read(reinterpret_cast<char *>(temp), sizeof(CITA));
 			strcpy(aux->nombreDueño, temp->nombreDueño);
 			strcpy(aux->nombreMascota, temp->nombreMascota);
 			aux->telefono = temp->telefono;
@@ -1138,7 +1145,7 @@ void loadLista() {
 			aux->especieIndex = temp->especieIndex;
 			aux->formaPago = temp->formaPago;
 			aux->costo = temp->costo;
-			delete reinterpret_cast<char*>(temp);
+			delete reinterpret_cast<char *>(temp);
 			aux->next = NULL;
 			aux = origin;
 		}

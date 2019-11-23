@@ -75,7 +75,7 @@ int indexImage;
 #pragma region PrototipoFunciones
 //Archivos
 void saveDoctor();
-void saveLista(CITA *origin);
+void saveLista();
 void loadDoctor();
 void loadLista();
 //Operaciones
@@ -120,7 +120,7 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrev, PSTR cmdLine, int cShow) {
 	}
 
 	saveDoctor();
-	saveLista(origin);
+	saveLista();
 	return 0;
 }
 
@@ -190,7 +190,7 @@ BOOL CALLBACK agendaVentanaPrincipal(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
 		}
 		//GESTIÓN DE CITAS
 		if (LOWORD(wParam) == BTN_SAVE && HIWORD(wParam) == BN_CLICKED) {
-			saveLista(origin);
+			saveLista();
 		}
 		if (LOWORD(wParam) == BTN_SELECT && HIWORD(wParam) == BN_CLICKED) {
 			int index = SendMessage(hLbAgenda, LB_GETCURSEL, 0, 0);
@@ -1062,7 +1062,7 @@ void saveDoctor() {
 	archivo.close();
 }
 
-void saveLista(CITA *origin) {
+void saveLista() {
 	archivo.open("listaCitas.bin", ios::out | ios::trunc | ios::binary);
 	if (!archivo.is_open()) {
 		MessageBox(NULL, "No se pudo guardar archivo de citas.", "AVISO", MB_ICONERROR);

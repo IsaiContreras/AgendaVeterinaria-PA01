@@ -1,1 +1,7 @@
-﻿  AgendaVeterinaria PA 01.vcxproj -> D:\alexi\Documents\Visual Proyectos\AgendaVeterinaria PA 01\Debug\AgendaVeterinaria PA 01.exe
+﻿  mainSource.cpp
+d:\alexi\documents\visual proyectos\agendaveterinaria pa 01\agendaveterinaria pa 01\mainsource.cpp(831): warning C4244: 'inicializando': conversión de 'double' a 'float'; posible pérdida de datos
+d:\alexi\documents\visual proyectos\agendaveterinaria pa 01\agendaveterinaria pa 01\mainsource.cpp(1081): warning C4244: 'inicializando': conversión de 'std::streamoff' a 'int'; posible pérdida de datos
+d:\alexi\documents\visual proyectos\agendaveterinaria pa 01\agendaveterinaria pa 01\mainsource.cpp(1105): warning C4244: 'inicializando': conversión de 'std::streamoff' a 'int'; posible pérdida de datos
+d:\alexi\documents\visual proyectos\agendaveterinaria pa 01\agendaveterinaria pa 01\mainsource.cpp(1109): warning C4018: '<': no coinciden signed/unsigned
+d:\alexi\documents\visual proyectos\agendaveterinaria pa 01\agendaveterinaria pa 01\mainsource.cpp(1429): warning C4244: '=': conversión de 'double' a 'float'; posible pérdida de datos
+  AgendaVeterinaria PA 01.vcxproj -> D:\alexi\Documents\Visual Proyectos\AgendaVeterinaria PA 01\Debug\AgendaVeterinaria PA 01.exe

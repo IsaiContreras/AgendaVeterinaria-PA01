@@ -102,6 +102,7 @@ BOOL CALLBACK primerDoctor(HWND, UINT, WPARAM, LPARAM);
 
 int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrev, PSTR cmdLine, int cShow) {
 	origin = aux = NULL;
+	doc = NULL;
 	hInstGlobal = hInst;
 
 	loadDoctor();
@@ -128,34 +129,24 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrev, PSTR cmdLine, int cShow) {
 BOOL CALLBACK agendaVentanaPrincipal(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 	switch (msg) {
 	case WM_INITDIALOG: {
-		hBarraMenu = GetMenu(hwnd);
-		EnableMenuItem(hBarraMenu, BTN_AGENDA, MF_DISABLED);
-		EnableMenuItem(hBarraMenu, BTN_NUEVACITA, MF_ENABLED);
-		EnableMenuItem(hBarraMenu, BTN_EDITDOCINFO, MF_ENABLED);
-		EnableMenuItem(hBarraMenu, BTN_SALIR, MF_ENABLED);
+		if (doc == NULL) {
+			int primerDoc = DialogBox(hInstGlobal, MAKEINTRESOURCE(IDD_PRIMERDOCTOR), hwnd, primerDoctor);
+		}
+
+		hLblNombreMedico = GetDlgItem(hwnd, ST_MENU_DOCTOR);
+		hLblCedula = GetDlgItem(hwnd, ST_MENU_CEDULA);
+		SetWindowText(hLblNombreMedico, doc->nombreMedico);
+		SetWindowText(hLblCedula, doc->cedula);
+		hPcFotoDoctor = GetDlgItem(hwnd, BMP_MENU_DOCTOR);
+		hBmpDoctor = (HBITMAP)LoadImage(NULL, doc->chDirFotoDoc, IMAGE_BITMAP, 100, 120, LR_LOADFROMFILE);
+		SendMessage(hPcFotoDoctor, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hBmpDoctor);
 
 		SendMessage(hLbAgenda, LB_RESETCONTENT, 0, 0);
-
 		ordenamiento();
-
 		hLbAgenda = GetDlgItem(hwnd, IDC_LISTACITAS);
 		impresion();
 
 		hLblReloj = GetDlgItem(hwnd, ST_MENU_RELOJ);
-
-		hLblNombreMedico = GetDlgItem(hwnd, ST_MENU_DOCTOR);
-		hLblCedula = GetDlgItem(hwnd, ST_MENU_CEDULA);
-
-		if (doc != NULL) {
-			SetWindowText(hLblNombreMedico, doc->nombreMedico);
-			SetWindowText(hLblCedula, doc->cedula);
-		}
-		else {
-			int primerDoc = DialogBox(hInstGlobal, MAKEINTRESOURCE(IDD_PRIMERDOCTOR), hwnd, primerDoctor);
-		}
-		hPcFotoDoctor = GetDlgItem(hwnd, BMP_MENU_DOCTOR);
-		hBmpDoctor = (HBITMAP)LoadImage(NULL, doc->chDirFotoDoc, IMAGE_BITMAP, 100, 120, LR_LOADFROMFILE);
-		SendMessage(hPcFotoDoctor, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hBmpDoctor);
 		
 		HWND hLblListCount = GetDlgItem(hwnd, ST_LISTCOUNT);
 		int lista = SendMessage(hLbAgenda, LB_GETCOUNT, 0, 0);
@@ -163,6 +154,12 @@ BOOL CALLBACK agendaVentanaPrincipal(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
 		char listaC[20];
 		strcpy(listaC, n.c_str());
 		SetWindowText(hLblListCount, listaC);
+
+		hBarraMenu = GetMenu(hwnd);
+		EnableMenuItem(hBarraMenu, BTN_AGENDA, MF_DISABLED);
+		EnableMenuItem(hBarraMenu, BTN_NUEVACITA, MF_ENABLED);
+		EnableMenuItem(hBarraMenu, BTN_EDITDOCINFO, MF_ENABLED);
+		EnableMenuItem(hBarraMenu, BTN_SALIR, MF_ENABLED);
 	}break;
 	case WM_COMMAND: {
 		//OPCIONES DE BARRA DE MENU
@@ -1038,9 +1035,6 @@ BOOL CALLBACK primerDoctor(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 				MessageBox(hwnd, "Llene la cédula.", "AVISO", MB_ICONEXCLAMATION);
 				break;
 			}
-
-			SetWindowText(hLblNombreMedico, doc->nombreMedico);
-			SetWindowText(hLblCedula, doc->cedula);
 			EndDialog(hwnd, 0);
 		}
 		break;

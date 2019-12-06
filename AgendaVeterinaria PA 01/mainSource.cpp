@@ -62,12 +62,14 @@ struct CITA {
 struct DOCTOR {
 	char nombreMedico[50] = { NULL };
 	char cedula[30] = { NULL };
+	char password[20] = {NULL};
 	char chDirFotoDoc[MAX_PATH] = "";
 }*doc;
 
 fstream archivo;
 
 char chCambioFoto[MAX_PATH] = "";
+bool entrada = true;
 bool salida = false;
 int indexImage;
 #pragma endregion
@@ -98,6 +100,7 @@ BOOL CALLBACK editarCita(HWND, UINT, WPARAM, LPARAM);
 BOOL CALLBACK pagarCita(HWND, UINT, WPARAM, LPARAM);
 BOOL CALLBACK editarInfoDoctor(HWND, UINT, WPARAM, LPARAM);
 BOOL CALLBACK primerDoctor(HWND, UINT, WPARAM, LPARAM);
+BOOL CALLBACK contraseña(HWND, UINT, WPARAM, LPARAM);
 #pragma endregion
 
 int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrev, PSTR cmdLine, int cShow) {
@@ -132,6 +135,12 @@ BOOL CALLBACK agendaVentanaPrincipal(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
 		if (doc == NULL) {
 			int primerDoc = DialogBox(hInstGlobal, MAKEINTRESOURCE(IDD_PRIMERDOCTOR), hwnd, primerDoctor);
 		}
+		else {
+			if (entrada) {
+				int contra = DialogBox(hInstGlobal, MAKEINTRESOURCE(IDD_PASSWORD), hwnd, contraseña);
+				entrada = false;
+			}
+		}
 
 		hLblNombreMedico = GetDlgItem(hwnd, ST_MENU_DOCTOR);
 		hLblCedula = GetDlgItem(hwnd, ST_MENU_CEDULA);
@@ -150,9 +159,8 @@ BOOL CALLBACK agendaVentanaPrincipal(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
 		
 		HWND hLblListCount = GetDlgItem(hwnd, ST_LISTCOUNT);
 		int lista = SendMessage(hLbAgenda, LB_GETCOUNT, 0, 0);
-		string n = to_string(lista);
 		char listaC[20];
-		strcpy(listaC, n.c_str());
+		_itoa(lista, listaC, 10);
 		SetWindowText(hLblListCount, listaC);
 
 		hBarraMenu = GetMenu(hwnd);
@@ -981,6 +989,52 @@ BOOL CALLBACK editarInfoDoctor(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 				break;
 			}
 
+			HWND hEdContra = GetDlgItem(hwnd, EDT_EDM_NEWPASSWORD);
+			length = GetWindowTextLength(hEdContra);
+			if (length > 0) {
+				HWND hEdContraActual = GetDlgItem(hwnd, EDT_EDM_PASSWORD);
+				length = GetWindowTextLength(hEdContraActual);
+				char passBuff[20];
+				GetWindowText(hEdContraActual, passBuff, length + 1);
+				string password(doc->password);
+				string comp(passBuff);
+				if (password.compare(comp) == 0) {
+					length = GetWindowTextLength(hEdContra);
+					char newPassBuff[20];
+					if (length > 0) {
+						GetWindowText(hEdContra, newPassBuff, length + 1);
+					}
+					else {
+						MessageBox(hwnd, "Asigne una contraseña nueva.", "AVISO", MB_ICONEXCLAMATION);
+						break;
+					}
+
+					HWND hEdConfirma = GetDlgItem(hwnd, EDT_EDM_CONFIRMPASSWORD);
+					length = GetWindowTextLength(hEdConfirma);
+					if (length > 0) {
+						GetWindowText(hEdContra, passBuff, length + 1);
+					}
+					else {
+						MessageBox(hwnd, "Confirme su nueva contraseña.", "AVISO", MB_ICONEXCLAMATION);
+						break;
+					}
+
+					string password(newPassBuff);
+					string confirm(passBuff);
+					if (password.compare(confirm) != 0) {
+						MessageBox(hwnd, "La confirmación no coincidió con la contraseña nueva.", "AVISO", MB_ICONINFORMATION);
+						break;
+					}
+					else {
+						strcpy(doc->password, newPassBuff);
+					}
+				}
+				else {
+					MessageBox(hwnd, "Contraseña incorrecta.", "AVISO", MB_ICONEXCLAMATION);
+					break;
+				}
+			}
+
 			DestroyWindow(hEditarDoctor);
 			hAgenda = CreateDialog(hInstGlobal, MAKEINTRESOURCE(IDD_AGENDA), NULL, agendaVentanaPrincipal);
 			ShowWindow(hAgenda, SW_SHOW);
@@ -1035,6 +1089,66 @@ BOOL CALLBACK primerDoctor(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 				MessageBox(hwnd, "Llene la cédula.", "AVISO", MB_ICONEXCLAMATION);
 				break;
 			}
+
+			HWND hEdContra = GetDlgItem(hwnd, EDT_EDM_NEWPASSWORD);
+			length = GetWindowTextLength(hEdContra);
+			if (length > 0) {
+				GetWindowText(hEdContra, doc->password, length + 1);
+			}
+			else {
+				MessageBox(hwnd, "Asigne una contraseña.", "AVISO", MB_ICONEXCLAMATION);
+				break;
+			}
+
+			HWND hEdConfirma = GetDlgItem(hwnd, EDT_EDM_CONFIRMPASSWORD);
+			char passBuff[20];
+			length = GetWindowTextLength(hEdConfirma);
+			if (length > 0) {
+				GetWindowText(hEdContra, passBuff, length + 1);
+			}
+			else {
+				MessageBox(hwnd, "Confirme su contraseña.", "AVISO", MB_ICONEXCLAMATION);
+				break;
+			}
+
+			string password(doc->password);
+			string confirm(passBuff);
+			if (password.compare(confirm) != 0) {
+				MessageBox(hwnd, "La confirmación no coincidió con la contraseña asignada.", "AVISO", MB_ICONINFORMATION);
+				break;
+			}
+
+			EndDialog(hwnd, 0);
+		}
+		break;
+	}
+	return FALSE;
+}
+
+BOOL CALLBACK contraseña(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+	switch (msg) {
+	case WM_INITDIALOG: {
+		HWND hLblNombreMedicoPass = GetDlgItem(hwnd, ST_PASS_DOCTOR);
+		HWND hLblCedulaPass = GetDlgItem(hwnd, ST_PASS_CEDULA);
+		SetWindowText(hLblNombreMedicoPass, doc->nombreMedico);
+		SetWindowText(hLblCedulaPass, doc->cedula);
+		hPcFotoDoctor = GetDlgItem(hwnd, BMP_PASS_DOCTOR);
+		hBmpDoctor = (HBITMAP)LoadImage(NULL, doc->chDirFotoDoc, IMAGE_BITMAP, 100, 120, LR_LOADFROMFILE);
+		SendMessage(hPcFotoDoctor, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hBmpDoctor);
+	}break;
+	case WM_COMMAND:
+		if (LOWORD(wParam) == IDOK && HIWORD(wParam) == BN_CLICKED) {
+			HWND hEdPassword = GetDlgItem(hwnd, EDT_PASS_PASSWORD);
+			int length = GetWindowTextLength(hEdPassword);
+			char passBuff[20];
+			GetWindowText(hEdPassword, passBuff, length+1);
+			string password(doc->password);
+			string compare(passBuff);
+			if (password.compare(compare) != 0) {
+				MessageBox(hwnd, "Contraseña incorrecta.", "AVISO", MB_ICONEXCLAMATION);
+				break;
+			}
+
 			EndDialog(hwnd, 0);
 		}
 		break;
@@ -1089,6 +1203,7 @@ void loadDoctor() {
 		strcpy(doc->nombreMedico, temp->nombreMedico);
 		strcpy(doc->cedula, temp->cedula);
 		strcpy(doc->chDirFotoDoc, temp->chDirFotoDoc);
+		strcpy(doc->password, temp->password);
 		delete reinterpret_cast<char *>(temp);
 	}
 	archivo.close();
